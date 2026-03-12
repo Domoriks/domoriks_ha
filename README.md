@@ -1,5 +1,7 @@
 # Domoriks
 
+![Domoriks](custom_components/domoriks/brand/logo.png)
+
 Home Assistant custom integration for controlling Domoriks Modbus modules over serial.
 
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=domoriks&repository=domoriks_ha&category=integration)

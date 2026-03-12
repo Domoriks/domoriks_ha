@@ -5,7 +5,7 @@
 Home Assistant custom integration for controlling Domoriks Modbus modules over serial.
 
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=domoriks&repository=domoriks_ha&category=integration)
-[![Open your Home Assistant instance and start setting up Domoriks.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=domoriks)
+<!-- [![Open your Home Assistant instance and start setting up Domoriks.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=domoriks) -->
 
 ## Features
 

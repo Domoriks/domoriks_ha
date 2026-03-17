@@ -35,6 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 class DomoriksRuntimeData:
     hub: DomoriksHub
     coordinator: DomoriksCoordinator
+    manual_command: str = "rc 64 0 6"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

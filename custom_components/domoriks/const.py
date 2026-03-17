@@ -51,6 +51,11 @@ EVENT_DISCONNECTED: Final = f"{DOMAIN}_disconnected"
 MANUFACTURER: Final = "Domoriks"
 MODEL: Final = "Domoriks Modbus Module"
 
-PLATFORMS: Final[list[Platform]] = [Platform.SWITCH]
+PLATFORMS: Final[list[Platform]] = [
+    Platform.SWITCH,
+    Platform.SENSOR,
+    Platform.TEXT,
+    Platform.BUTTON,
+]
 
 SERVICE_COMMAND: Final = "command"

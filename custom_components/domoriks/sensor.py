@@ -4,6 +4,13 @@ import logging
 from datetime import datetime
 from typing import Any
 
+
+def _format_timestamp() -> str:
+    """Format current UTC time as YYYY-MM-DD HHh MMm SS.mmmms"""
+    now = datetime.utcnow()
+    ms = now.microsecond // 1000
+    return now.strftime('%Y-%m-%d, %H:%M:%S') + f".{ms:03d}s"
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
@@ -20,6 +27,7 @@ from .const import (
     MANUFACTURER,
 )
 from .hub import DomoriksHub
+from .modbus import ModbusCodec
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +41,58 @@ _FUNC_NAMES: dict[int, str] = {
     0x0F: "Write Multi Coils",
     0x10: "Write Multi Regs",
 }
+
+
+def _event_parts(event: Event) -> tuple[int, int, str] | None:
+    """Return event data as (slave, function, payload_hex)."""
+    slave = event.data.get("slave")
+    function = event.data.get("function")
+    payload = event.data.get("payload", "")
+
+    if isinstance(slave, int) and isinstance(function, int):
+        return slave, function, payload if isinstance(payload, str) else ""
+
+    frame = event.data.get("frame")
+    if not isinstance(frame, str) or not frame:
+        return None
+
+    try:
+        raw = bytes.fromhex(frame)
+    except ValueError:
+        return None
+
+    try:
+        parsed_slave, parsed_function, parsed_payload = ModbusCodec.decode(raw)
+        return parsed_slave, parsed_function, parsed_payload.hex()
+    except ValueError:
+        if len(raw) < 4:
+            return None
+        return raw[0], raw[1], raw[2:-2].hex()
+
+
+def _command_details(
+    slave: int,
+    function: int,
+    payload_hex: str,
+    direction: str,
+) -> tuple[str, dict[str, Any]]:
+    fn = _FUNC_NAMES.get(function, f"0x{function:02X}")
+    value = f"{fn} {direction} slave {slave}"
+    extra = {
+        "slave": slave,
+        "function": f"0x{function:02X}",
+        "function_name": fn,
+        "payload": payload_hex,
+    }
+    return value, extra
+
+
+def _frame_hex(slave: int, function: int, payload_hex: str) -> str:
+    try:
+        payload = bytes.fromhex(payload_hex)
+    except ValueError:
+        return payload_hex
+    return ModbusCodec.encode(slave, function, payload).hex()
 
 
 def _gateway_device(entry: ConfigEntry) -> DeviceInfo:
@@ -67,25 +127,39 @@ class DomoriksRxSensor(_GatewayBase):
     def __init__(self, hub: DomoriksHub, entry: ConfigEntry) -> None:
         super().__init__(hub, entry)
         self._attr_unique_id = f"{entry.entry_id}_bus_rx"
-        self._attr_name = "Last RX"
+        self._attr_name = "Last RX Command"
         self._extra: dict[str, Any] = {}
         if hub.last_rx:
             f = hub.last_rx
-            fn = _FUNC_NAMES.get(f.function, f"0x{f.function:02X}")
-            self._attr_native_value = f"{fn} from slave {f.slave}"
-            self._extra = {"slave": f.slave, "function": f"0x{f.function:02X}", "function_name": fn, "payload": f.payload.hex(), "timestamp": "-"}
+            value, extra = _command_details(
+                f.slave,
+                f.function,
+                f.payload.hex(),
+                "from",
+            )
+            self._attr_native_value = value
+            self._extra = {**extra, "timestamp": "-"}
 
     async def async_added_to_hass(self) -> None:
         self._unsub = self.hass.bus.async_listen(EVENT_RX, self._handle)
 
     @callback
     def _handle(self, event: Event) -> None:
-        slave: int = event.data.get("slave", 0)
-        function: int = event.data.get("function", 0)
-        payload: str = event.data.get("payload", "")
-        fn = _FUNC_NAMES.get(function, f"0x{function:02X}")
-        self._attr_native_value = f"{fn} from slave {slave}"
-        self._extra = {"slave": slave, "function": f"0x{function:02X}", "function_name": fn, "payload": payload, "timestamp": datetime.utcnow().isoformat() + "Z"}
+        parts = _event_parts(event)
+        if parts:
+            slave, function, payload_hex = parts
+            value, extra = _command_details(slave, function, payload_hex, "from")
+            self._attr_native_value = value
+            self._extra = {**extra, "timestamp": _format_timestamp()}
+        else:
+            command: str = event.data.get("command", "")
+            frame: str = event.data.get("frame", "")
+            self._attr_native_value = command or frame
+            self._extra = {
+                "command": command,
+                "frame": frame,
+                "timestamp": _format_timestamp(),
+            }
         self.async_write_ha_state()
 
     @property
@@ -109,7 +183,38 @@ class DomoriksRxTimeSensor(_GatewayBase):
 
     @callback
     def _handle(self, event: Event) -> None:
-        self._attr_native_value = datetime.utcnow().isoformat() + "Z"
+        self._attr_native_value = _format_timestamp()
+        self.async_write_ha_state()
+
+
+class DomoriksRxRawDataSensor(_GatewayBase):
+    """Raw payload data of the last received frame."""
+
+    _attr_icon = "mdi:hexadecimal"
+    _attr_native_value: str | None = None
+
+    def __init__(self, hub: DomoriksHub, entry: ConfigEntry) -> None:
+        super().__init__(hub, entry)
+        self._attr_unique_id = f"{entry.entry_id}_bus_rx_raw"
+        self._attr_name = "Last RX Raw Data"
+        if hub.last_rx:
+            self._attr_native_value = ModbusCodec.encode(
+                hub.last_rx.slave,
+                hub.last_rx.function,
+                hub.last_rx.payload,
+            ).hex()
+
+    async def async_added_to_hass(self) -> None:
+        self._unsub = self.hass.bus.async_listen(EVENT_RX, self._handle)
+
+    @callback
+    def _handle(self, event: Event) -> None:
+        parts = _event_parts(event)
+        if parts:
+            self._attr_native_value = _frame_hex(*parts)
+        else:
+            frame: str = event.data.get("frame", "") or event.data.get("payload", "")
+            self._attr_native_value = frame
         self.async_write_ha_state()
 
 
@@ -121,23 +226,39 @@ class DomoriksLastTxSensor(_GatewayBase):
     def __init__(self, hub: DomoriksHub, entry: ConfigEntry) -> None:
         super().__init__(hub, entry)
         self._attr_unique_id = f"{entry.entry_id}_bus_tx"
-        self._attr_name = "Last TX"
+        self._attr_name = "Last TX Command"
         self._extra: dict[str, Any] = {}
         if hub.last_tx:
             f = hub.last_tx
-            fn = _FUNC_NAMES.get(f.function, f"0x{f.function:02X}")
-            self._attr_native_value = f"{fn} to slave {f.slave}"
-            self._extra = {"slave": f.slave, "function": f"0x{f.function:02X}", "function_name": fn, "payload": f.payload.hex(), "timestamp": "-"}
+            value, extra = _command_details(
+                f.slave,
+                f.function,
+                f.payload.hex(),
+                "to",
+            )
+            self._attr_native_value = value
+            self._extra = {**extra, "timestamp": "-"}
 
     async def async_added_to_hass(self) -> None:
         self._unsub = self.hass.bus.async_listen(EVENT_TX, self._handle)
 
     @callback
     def _handle(self, event: Event) -> None:
-        command: str = event.data.get("command", "")
-        frame: str = event.data.get("frame", "")
-        self._attr_native_value = command or frame
-        self._extra = {"command": command, "frame": frame, "timestamp": datetime.utcnow().isoformat() + "Z"}
+        parts = _event_parts(event)
+        if parts:
+            slave, function, payload_hex = parts
+            value, extra = _command_details(slave, function, payload_hex, "to")
+            self._attr_native_value = value
+            self._extra = {**extra, "timestamp": _format_timestamp()}
+        else:
+            command: str = event.data.get("command", "")
+            frame: str = event.data.get("frame", "")
+            self._attr_native_value = command or frame
+            self._extra = {
+                "command": command,
+                "frame": frame,
+                "timestamp": _format_timestamp(),
+            }
         self.async_write_ha_state()
 
     @property
@@ -161,7 +282,38 @@ class DomoriksLastTxTimeSensor(_GatewayBase):
 
     @callback
     def _handle(self, event: Event) -> None:
-        self._attr_native_value = datetime.utcnow().isoformat() + "Z"
+        self._attr_native_value = _format_timestamp()
+        self.async_write_ha_state()
+
+
+class DomoriksLastTxRawDataSensor(_GatewayBase):
+    """Raw frame data of the last transmitted command."""
+
+    _attr_icon = "mdi:hexadecimal"
+    _attr_native_value: str | None = None
+
+    def __init__(self, hub: DomoriksHub, entry: ConfigEntry) -> None:
+        super().__init__(hub, entry)
+        self._attr_unique_id = f"{entry.entry_id}_bus_tx_raw"
+        self._attr_name = "Last TX Raw Data"
+        if hub.last_tx:
+            self._attr_native_value = ModbusCodec.encode(
+                hub.last_tx.slave,
+                hub.last_tx.function,
+                hub.last_tx.payload,
+            ).hex()
+
+    async def async_added_to_hass(self) -> None:
+        self._unsub = self.hass.bus.async_listen(EVENT_TX, self._handle)
+
+    @callback
+    def _handle(self, event: Event) -> None:
+        parts = _event_parts(event)
+        if parts:
+            self._attr_native_value = _frame_hex(*parts)
+        else:
+            frame: str = event.data.get("frame", "") or event.data.get("payload", "")
+            self._attr_native_value = frame
         self.async_write_ha_state()
 
 
@@ -203,7 +355,7 @@ class DomoriksConnectionStatusSensor(_GatewayBase):
     def _on_error(self, event: Event) -> None:
         error: str = event.data.get("error", "unknown")
         self._attr_native_value = "error"
-        self._attr_extra_state_attributes = {"error": error, "timestamp": datetime.utcnow().isoformat() + "Z"}
+        self._attr_extra_state_attributes = {"error": error, "timestamp": _format_timestamp()}
         self.async_write_ha_state()
 
 
@@ -216,7 +368,9 @@ def async_setup_entry(
     async_add_entities([
         DomoriksRxSensor(hub, entry),
         DomoriksRxTimeSensor(hub, entry),
+        DomoriksRxRawDataSensor(hub, entry),
         DomoriksLastTxSensor(hub, entry),
         DomoriksLastTxTimeSensor(hub, entry),
+        DomoriksLastTxRawDataSensor(hub, entry),
         DomoriksConnectionStatusSensor(hub, entry),
     ])

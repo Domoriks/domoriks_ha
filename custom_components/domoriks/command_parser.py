@@ -53,7 +53,7 @@ def parse_command(command: str):
     if cmd == "ri":
         return READ_DISC_INPUTS, args[0], struct.pack(">HH", args[1], args[2])
 
-    if cmd == "rh":
+    if cmd in {"rh", "rhr", "read_holding_register", "read_holding_registers"}:
         return READ_HOLD_REGS, args[0], struct.pack(">HH", args[1], args[2])
 
     if cmd == "rr":

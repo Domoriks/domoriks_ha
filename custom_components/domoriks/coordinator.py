@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, EVENT_RX, READ_COILS
+from .const import DOMAIN, EVENT_RX, READ_COILS, WRITE_FUNCTIONS
 from .hub import DomoriksHub, ModuleConfig
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,15 +70,16 @@ class DomoriksCoordinator(DataUpdateCoordinator[Dict[int, List[bool]]]):
             states = _parse_read_coils_payload(payload_hex, module.outputs)
             new_data = {**(self.data or {}), module.module_id: states}
             self.async_set_updated_data(new_data)
-        else:
-            # Any other bus activity (e.g. write response / button press) — trigger a
-            # debounced read for all modules. Cancel any already-pending read so that a
-            # burst of activity (rapid button presses) only results in ONE follow-up read.
+        elif function in WRITE_FUNCTIONS:
+            # Write response — trigger a debounced coil re-read so the new state is
+            # reflected in HA. Cancel any already-pending read so that a burst of writes
+            # (rapid button presses) only results in ONE follow-up read.
             if self._read_after_activity_task and not self._read_after_activity_task.done():
                 self._read_after_activity_task.cancel()
             self._read_after_activity_task = self.hass.async_create_task(
                 self._async_read_all_after_activity()
             )
+        # else: read-only responses (0x02, 0x03, 0x04) — ignore, state hasn't changed.
 
     async def _async_update_data(self) -> Dict[int, List[bool]]:
         """Called once on startup to fetch initial coil state for all modules."""

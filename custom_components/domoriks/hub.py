@@ -36,6 +36,7 @@ from .const import (
     EVENT_STARTED,
     EVENT_TX,
     READ_COILS,
+    READ_HOLD_REGS,
     WRITE_SINGLE_COIL,
 )
 from .modbus import ModbusCodec
@@ -238,6 +239,36 @@ class DomoriksHub:
         data = response.payload[1 : 1 + byte_count]
         value = int.from_bytes(data, byteorder="little")
         return [(value >> bit) & 0x01 == 1 for bit in range(count)]
+
+    async def async_read_holding_registers(
+        self,
+        slave: int,
+        start: int,
+        count: int,
+    ) -> List[int]:
+        payload = struct.pack(">HH", start, count)
+        frame = ModbusCodec.encode(slave, READ_HOLD_REGS, payload)
+        async with self._lock:
+            await self._send_raw(frame)
+            self.last_tx = Frame(slave, READ_HOLD_REGS, payload)
+            response = await self._wait_for_response(slave, READ_HOLD_REGS)
+
+        if not response.payload:
+            raise DomoriksError("Empty Modbus response")
+
+        byte_count = response.payload[0]
+        data = response.payload[1 : 1 + byte_count]
+        if len(data) != byte_count or byte_count % 2 != 0:
+            raise DomoriksError("Invalid READ_HOLD_REGS response length")
+
+        registers: List[int] = []
+        for i in range(0, byte_count, 2):
+            registers.append(struct.unpack(">H", data[i : i + 2])[0])
+
+        if len(registers) < count:
+            raise DomoriksError("Incomplete READ_HOLD_REGS response")
+
+        return registers[:count]
 
     async def async_write_coil(self, slave: int, address: int, state: bool) -> None:
         _LOGGER.info(

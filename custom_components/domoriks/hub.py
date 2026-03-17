@@ -262,6 +262,29 @@ class DomoriksHub:
                 )
                 raise
 
+    async def async_toggle_coil(self, slave: int, address: int) -> None:
+        _LOGGER.info(
+            "Toggle coil: slave=%s, address=%s, state=0x5555",
+            slave, address
+        )
+        payload = struct.pack(">HH", address, 0x5555)
+        frame = ModbusCodec.encode(slave, WRITE_SINGLE_COIL, payload)
+        async with self._lock:
+            try:
+                await self._send_raw(frame)
+                self.last_tx = Frame(slave, WRITE_SINGLE_COIL, payload)
+                await self._wait_for_response(slave, WRITE_SINGLE_COIL)
+                _LOGGER.info(
+                    "Toggle coil successful: slave=%s, address=%s",
+                    slave, address
+                )
+            except Exception as exc:
+                _LOGGER.error(
+                    "Toggle coil failed: slave=%s, address=%s, error=%s",
+                    slave, address, exc
+                )
+                raise
+
     async def async_send_command_string(self, command: str) -> None:
         function, slave, payload = parse_command(command)
         frame = ModbusCodec.encode(slave, function, payload)

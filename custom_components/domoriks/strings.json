@@ -1,0 +1,97 @@
+{
+  "title": "Domoriks",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Domoriks options",
+        "description": "Adjust polling and module configuration.",
+        "data": {
+          "port": "Serial port",
+          "baudrate": "Baudrate",
+          "poll_interval": "Poll interval (seconds)",
+          "reconnect_interval": "Reconnect interval (seconds)",
+          "modules": "Modules ([id]:[outputs])"
+        }
+      },
+      "module": {
+        "title": "Module {module_id} — {outputs} outputs",
+        "description": "Status: {status}\n\nSet a name and icon for each output. Enable the pulse toggle next to an output to briefly activate it for easy identification.",
+        "data": {
+          "remove_module": "⚠ Remove this module from setup",
+          "name_0": "Output 1 — name", "icon_0": "Output 1 — icon",
+          "name_1": "Output 2 — name", "icon_1": "Output 2 — icon",
+          "name_2": "Output 3 — name", "icon_2": "Output 3 — icon",
+          "name_3": "Output 4 — name", "icon_3": "Output 4 — icon",
+          "name_4": "Output 5 — name", "icon_4": "Output 5 — icon",
+          "name_5": "Output 6 — name", "icon_5": "Output 6 — icon",
+          "name_6": "Output 7 — name", "icon_6": "Output 7 — icon",
+          "name_7": "Output 8 — name", "icon_7": "Output 8 — icon",
+          "name_8": "Output 9 — name", "icon_8": "Output 9 — icon",
+          "name_9": "Output 10 — name", "icon_9": "Output 10 — icon",
+          "name_10": "Output 11 — name", "icon_10": "Output 11 — icon",
+          "name_11": "Output 12 — name", "icon_11": "Output 12 — icon",
+          "name_12": "Output 13 — name", "icon_12": "Output 13 — icon",
+          "name_13": "Output 14 — name", "icon_13": "Output 14 — icon",
+          "name_14": "Output 15 — name", "icon_14": "Output 15 — icon",
+          "name_15": "Output 16 — name", "icon_15": "Output 16 — icon"
+        }
+      }
+    },
+    "error": {
+      "invalid_modules": "Modules must be formatted as [id]:[outputs]",
+      "module_unreachable": "Module {module_id} is not responding. Check wiring. You can remove it or continue anyway."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Domoriks options",
+        "description": "Adjust polling and module configuration.",
+        "data": {
+          "poll_interval": "Poll interval (seconds)",
+          "reconnect_interval": "Reconnect interval (seconds)",
+          "modules": "Modules ([id]:[outputs])"
+        }
+      },
+      "module": {
+        "title": "Module {module_id} — {outputs} outputs",
+        "description": "Status: {status}\n\nSet a name and icon for each output. Enable the pulse toggle next to an output to briefly activate it for easy identification.",
+        "data": {
+          "remove_module": "⚠ Remove this module from setup",
+          "name_0": "Output 1 — name", "icon_0": "Output 1 — icon",
+          "name_1": "Output 2 — name", "icon_1": "Output 2 — icon",
+          "name_2": "Output 3 — name", "icon_2": "Output 3 — icon",
+          "name_3": "Output 4 — name", "icon_3": "Output 4 — icon",
+          "name_4": "Output 5 — name", "icon_4": "Output 5 — icon",
+          "name_5": "Output 6 — name", "icon_5": "Output 6 — icon",
+          "name_6": "Output 7 — name", "icon_6": "Output 7 — icon",
+          "name_7": "Output 8 — name", "icon_7": "Output 8 — icon",
+          "name_8": "Output 9 — name", "icon_8": "Output 9 — icon",
+          "name_9": "Output 10 — name", "icon_9": "Output 10 — icon",
+          "name_10": "Output 11 — name", "icon_10": "Output 11 — icon",
+          "name_11": "Output 12 — name", "icon_11": "Output 12 — icon",
+          "name_12": "Output 13 — name", "icon_12": "Output 13 — icon",
+          "name_13": "Output 14 — name", "icon_13": "Output 14 — icon",
+          "name_14": "Output 15 — name", "icon_14": "Output 15 — icon",
+          "name_15": "Output 16 — name", "icon_15": "Output 16 — icon"
+        }
+      }
+    },
+    "error": {
+      "invalid_modules": "Modules must be formatted as [id]:[outputs]",
+      "module_unreachable": "Module {module_id} is not responding. Check wiring. You can remove it or continue anyway."
+    }
+  },
+  "services": {
+    "command": {
+      "name": "Send command",
+      "description": "Send a raw Domoriks command string (e.g. rc 64 0 16).",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "Command in the format 'cmd slave address data'."
+        }
+      }
+    }
+  }
+}

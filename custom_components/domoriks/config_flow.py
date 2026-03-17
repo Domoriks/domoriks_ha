@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from typing import Any, Dict, List, Optional
 
 import voluptuous as vol
@@ -89,7 +88,6 @@ def _build_module_schema(module: dict, prefill: dict, is_reachable: bool) -> vol
         )
         schema_dict[vol.Optional(f"name_{i}", default=default_name)] = str
         schema_dict[vol.Optional(f"icon_{i}", default=default_icon)] = str
-        schema_dict[vol.Optional(f"test_{i}", default=False)] = bool
 
     return vol.Schema(schema_dict)
 
@@ -133,28 +131,7 @@ class _ModuleNamingMixin:
                 self._current_input = {}
                 return await self.async_step_module()
 
-            # Strip test toggles from saved state so they reset on re-show.
-            self._current_input = {
-                k: v for k, v in user_input.items() if not k.startswith("test_")
-            }
-
-            # Pulse any output whose test toggle was flipped on.
-            triggered = [
-                int(k.split("_")[1])
-                for k, v in user_input.items()
-                if k.startswith("test_") and v
-            ]
-            if triggered:
-                hub = self._hub_for_test()
-                if hub and hub.is_connected:
-                    for idx in triggered:
-                        try:
-                            await hub.async_write_coil(module_id, idx, True)
-                            await asyncio.sleep(0.5)
-                            await hub.async_write_coil(module_id, idx, False)
-                        except Exception:  # noqa: BLE001
-                            pass
-                return self._show_module_form(module, is_reachable)
+            self._current_input = dict(user_input)
 
             # Save names + icons and advance to next module.
             output_names = {

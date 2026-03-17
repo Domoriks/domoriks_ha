@@ -240,12 +240,27 @@ class DomoriksHub:
         return [(value >> bit) & 0x01 == 1 for bit in range(count)]
 
     async def async_write_coil(self, slave: int, address: int, state: bool) -> None:
+        _LOGGER.info(
+            "Pulse test: Writing coil - slave=%s, address=%s, state=%s",
+            slave, address, state
+        )
         payload = struct.pack(">HH", address, 0xFF00 if state else 0x0000)
         frame = ModbusCodec.encode(slave, WRITE_SINGLE_COIL, payload)
         async with self._lock:
-            await self._send_raw(frame)
-            self.last_tx = Frame(slave, WRITE_SINGLE_COIL, payload)
-            await self._wait_for_response(slave, WRITE_SINGLE_COIL)
+            try:
+                await self._send_raw(frame)
+                self.last_tx = Frame(slave, WRITE_SINGLE_COIL, payload)
+                await self._wait_for_response(slave, WRITE_SINGLE_COIL)
+                _LOGGER.info(
+                    "Pulse test: Coil write successful - slave=%s, address=%s, state=%s",
+                    slave, address, state
+                )
+            except Exception as exc:
+                _LOGGER.error(
+                    "Pulse test: Coil write failed - slave=%s, address=%s, state=%s, error=%s",
+                    slave, address, state, exc
+                )
+                raise
 
     async def async_send_command_string(self, command: str) -> None:
         function, slave, payload = parse_command(command)

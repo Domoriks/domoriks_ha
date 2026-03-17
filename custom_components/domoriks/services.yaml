@@ -1,0 +1,7 @@
+command:
+  name: Domoriks Command
+  description: Send Domoriks Commands
+  fields:
+    command:
+      description: Command string 'cmd slave address data'
+      example: "rh 64 0 8"

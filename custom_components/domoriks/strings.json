@@ -85,7 +85,7 @@
   "services": {
     "command": {
       "name": "Send command",
-      "description": "Send a raw Domoriks command string (e.g. rc 64 0 16).",
+      "description": "Send a raw Domoriks command string (e.g. rc 64 0 16 or rh 64 0 8).",
       "fields": {
         "command": {
           "name": "Command",

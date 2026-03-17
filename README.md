@@ -129,6 +129,7 @@ Common commands:
 | Mnemonic | Function code | Description |
 |---|---|---|
 | `rc` | `0x01` | Read coils |
+| `rh` | `0x03` | Read holding registers |
 | `wc` | `0x05` | Write single coil. Use `0` = OFF, `1` = ON, `2` = toggle (`0x5555`). |
 | `wmc` | `0x0F` | Write multiple coils. Supports `wmc <slave> <start> <hexdata>` and `wmc <slave> <start> <bits> <hexdata>`. |
 | `wr` | `0x06` | Write single register. |

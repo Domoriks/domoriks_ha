@@ -3,83 +3,69 @@
   "config": {
     "step": {
       "user": {
-        "title": "Options Domoriks",
-        "description": "Ajuster l'interrogation et la configuration des modules.",
+        "title": "Configuration Domoriks",
+        "description": "Entrez les paramètres de connexion et choisissez comment configurer les modules.",
         "data": {
           "port": "Port série",
           "baudrate": "Baudrate",
           "poll_interval": "Intervalle de sondage (secondes)",
           "reconnect_interval": "Intervalle de reconnexion (secondes)",
-          "modules": "Modules ([id]:[outputs])"
+          "setup_mode": "Configuration des modules"
         }
       },
-      "module": {
-        "title": "Module {module_id} — {outputs} sorties",
-        "description": "État: {status}\n\nDéfinissez un nom et une icône par sortie. Activez le bouton d'impulsion pour tester brièvement une sortie.",
+      "manual": {
+        "title": "Configurer les modules manuellement",
+        "description": "Entrez les identifiants et nombres de sorties au format `id:outputs`, séparés par des virgules.",
         "data": {
-          "remove_module": "⚠ Retirer ce module de la configuration",
-          "name_0": "Sortie 1 — nom", "icon_0": "Sortie 1 — icône", "test_0": "Sortie 1 — impulsion test",
-          "name_1": "Sortie 2 — nom", "icon_1": "Sortie 2 — icône", "test_1": "Sortie 2 — impulsion test",
-          "name_2": "Sortie 3 — nom", "icon_2": "Sortie 3 — icône", "test_2": "Sortie 3 — impulsion test",
-          "name_3": "Sortie 4 — nom", "icon_3": "Sortie 4 — icône", "test_3": "Sortie 4 — impulsion test",
-          "name_4": "Sortie 5 — nom", "icon_4": "Sortie 5 — icône", "test_4": "Sortie 5 — impulsion test",
-          "name_5": "Sortie 6 — nom", "icon_5": "Sortie 6 — icône", "test_5": "Sortie 6 — impulsion test",
-          "name_6": "Sortie 7 — nom", "icon_6": "Sortie 7 — icône", "test_6": "Sortie 7 — impulsion test",
-          "name_7": "Sortie 8 — nom", "icon_7": "Sortie 8 — icône", "test_7": "Sortie 8 — impulsion test",
-          "name_8": "Sortie 9 — nom", "icon_8": "Sortie 9 — icône", "test_8": "Sortie 9 — impulsion test",
-          "name_9": "Sortie 10 — nom", "icon_9": "Sortie 10 — icône", "test_9": "Sortie 10 — impulsion test",
-          "name_10": "Sortie 11 — nom", "icon_10": "Sortie 11 — icône", "test_10": "Sortie 11 — impulsion test",
-          "name_11": "Sortie 12 — nom", "icon_11": "Sortie 12 — icône", "test_11": "Sortie 12 — impulsion test",
-          "name_12": "Sortie 13 — nom", "icon_12": "Sortie 13 — icône", "test_12": "Sortie 13 — impulsion test",
-          "name_13": "Sortie 14 — nom", "icon_13": "Sortie 14 — icône", "test_13": "Sortie 14 — impulsion test",
-          "name_14": "Sortie 15 — nom", "icon_14": "Sortie 15 — icône", "test_14": "Sortie 15 — impulsion test",
-          "name_15": "Sortie 16 — nom", "icon_15": "Sortie 16 — icône", "test_15": "Sortie 16 — impulsion test"
+          "modules": "Modules (id:outputs)"
+        }
+      },
+      "upload": {
+        "title": "Importer le JSON du projet",
+        "description": "Sélectionnez votre fichier JSON de projet Domoriks.",
+        "data": {
+          "config_file": "Fichier JSON du projet"
         }
       }
     },
     "error": {
-      "invalid_modules": "Les modules doivent être au format [id]:[outputs]",
-      "module_unreachable": "Le module {module_id} ne répond pas. Vérifiez le câblage. Vous pouvez le retirer ou continuer."
+      "invalid_modules": "Les modules doivent être au format id:outputs.",
+      "invalid_json": "Impossible d'analyser le JSON — assurez-vous qu'il s'agit d'un JSON de projet valide.",
+      "no_modules_found": "Aucun module de sortie trouvé dans le JSON.",
+      "file_selector_not_supported": "Le téléversement de fichiers n'est pas pris en charge dans ce frontend."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Options Domoriks",
-        "description": "Ajuster l'interrogation et la configuration des modules.",
+        "description": "Ajuster les paramètres de sondage et choisir comment mettre à jour les modules.",
         "data": {
           "poll_interval": "Intervalle de sondage (secondes)",
           "reconnect_interval": "Intervalle de reconnexion (secondes)",
-          "modules": "Modules ([id]:[outputs])"
+          "setup_mode": "Configuration des modules"
         }
       },
-      "module": {
-        "title": "Module {module_id} — {outputs} sorties",
-        "description": "État: {status}\n\nDéfinissez un nom et une icône par sortie. Activez le bouton d'impulsion pour tester brièvement une sortie.",
+      "manual": {
+        "title": "Configurer les modules manuellement",
+        "description": "Entrez les identifiants et nombres de sorties au format `id:outputs`, séparés par des virgules.",
         "data": {
-          "remove_module": "⚠ Retirer ce module de la configuration",
-          "name_0": "Sortie 1 — nom", "icon_0": "Sortie 1 — icône", "test_0": "Sortie 1 — impulsion test",
-          "name_1": "Sortie 2 — nom", "icon_1": "Sortie 2 — icône", "test_1": "Sortie 2 — impulsion test",
-          "name_2": "Sortie 3 — nom", "icon_2": "Sortie 3 — icône", "test_2": "Sortie 3 — impulsion test",
-          "name_3": "Sortie 4 — nom", "icon_3": "Sortie 4 — icône", "test_3": "Sortie 4 — impulsion test",
-          "name_4": "Sortie 5 — nom", "icon_4": "Sortie 5 — icône", "test_4": "Sortie 5 — impulsion test",
-          "name_5": "Sortie 6 — nom", "icon_5": "Sortie 6 — icône", "test_5": "Sortie 6 — impulsion test",
-          "name_6": "Sortie 7 — nom", "icon_6": "Sortie 7 — icône", "test_6": "Sortie 7 — impulsion test",
-          "name_7": "Sortie 8 — nom", "icon_7": "Sortie 8 — icône", "test_7": "Sortie 8 — impulsion test",
-          "name_8": "Sortie 9 — nom", "icon_8": "Sortie 9 — icône", "test_8": "Sortie 9 — impulsion test",
-          "name_9": "Sortie 10 — nom", "icon_9": "Sortie 10 — icône", "test_9": "Sortie 10 — impulsion test",
-          "name_10": "Sortie 11 — nom", "icon_10": "Sortie 11 — icône", "test_10": "Sortie 11 — impulsion test",
-          "name_11": "Sortie 12 — nom", "icon_11": "Sortie 12 — icône", "test_11": "Sortie 12 — impulsion test",
-          "name_12": "Sortie 13 — nom", "icon_12": "Sortie 13 — icône", "test_12": "Sortie 13 — impulsion test",
-          "name_13": "Sortie 14 — nom", "icon_13": "Sortie 14 — icône", "test_13": "Sortie 14 — impulsion test",
-          "name_14": "Sortie 15 — nom", "icon_14": "Sortie 15 — icône", "test_14": "Sortie 15 — impulsion test",
-          "name_15": "Sortie 16 — nom", "icon_15": "Sortie 16 — icône", "test_15": "Sortie 16 — impulsion test"
+          "modules": "Modules (id:outputs)"
+        }
+      },
+      "upload": {
+        "title": "Importer le JSON du projet",
+        "description": "Sélectionnez votre fichier JSON de projet Domoriks.",
+        "data": {
+          "import_file": "Fichier JSON du projet"
         }
       }
     },
     "error": {
-      "invalid_modules": "Les modules doivent être au format [id]:[outputs]",
-      "module_unreachable": "Le module {module_id} ne répond pas. Vérifiez le câblage. Vous pouvez le retirer ou continuer."
+      "invalid_modules": "Les modules doivent être au format id:outputs.",
+      "invalid_json": "Impossible d'analyser le JSON — assurez-vous qu'il s'agit d'un JSON de projet valide.",
+      "no_modules_found": "Aucun module de sortie trouvé dans le JSON.",
+      "file_selector_not_supported": "Le téléversement de fichiers n'est pas pris en charge dans ce frontend."
     }
   },
   "services": {

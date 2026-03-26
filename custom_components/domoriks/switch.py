@@ -41,9 +41,6 @@ class DomoriksSwitch(DomoriksCoordinatorEntity, SwitchEntity):
         self._attr_name = (
             module.output_names.get(str(index)) or f"Output {index + 1}"
         )
-        _icon = module.output_icons.get(str(index), "")
-        if _icon:
-            self._attr_icon = _icon
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(module.module_id))},
             manufacturer=MANUFACTURER,

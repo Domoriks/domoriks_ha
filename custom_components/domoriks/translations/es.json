@@ -3,83 +3,69 @@
   "config": {
     "step": {
       "user": {
-        "title": "Opciones Domoriks",
-        "description": "Ajusta el sondeo y la configuración de módulos.",
+        "title": "Configuración Domoriks",
+        "description": "Introduce los ajustes de conexión y elige cómo configurar los módulos.",
         "data": {
           "port": "Puerto serie",
           "baudrate": "Baudios",
           "poll_interval": "Intervalo de sondeo (segundos)",
           "reconnect_interval": "Intervalo de reconexión (segundos)",
-          "modules": "Módulos ([id]:[outputs])"
+          "setup_mode": "Configuración de módulos"
         }
       },
-      "module": {
-        "title": "Módulo {module_id} — {outputs} salidas",
-        "description": "Estado: {status}\n\nEscribe un nombre e icono por salida. Activa el interruptor de pulso para identificar físicamente una salida.",
+      "manual": {
+        "title": "Configurar módulos manualmente",
+        "description": "Introduce los IDs de módulo y número de salidas como `id:outputs`, separados por comas.",
         "data": {
-          "remove_module": "⚠ Eliminar este módulo de la configuración",
-          "name_0": "Salida 1 — nombre", "icon_0": "Salida 1 — icono", "test_0": "Salida 1 — pulso de prueba",
-          "name_1": "Salida 2 — nombre", "icon_1": "Salida 2 — icono", "test_1": "Salida 2 — pulso de prueba",
-          "name_2": "Salida 3 — nombre", "icon_2": "Salida 3 — icono", "test_2": "Salida 3 — pulso de prueba",
-          "name_3": "Salida 4 — nombre", "icon_3": "Salida 4 — icono", "test_3": "Salida 4 — pulso de prueba",
-          "name_4": "Salida 5 — nombre", "icon_4": "Salida 5 — icono", "test_4": "Salida 5 — pulso de prueba",
-          "name_5": "Salida 6 — nombre", "icon_5": "Salida 6 — icono", "test_5": "Salida 6 — pulso de prueba",
-          "name_6": "Salida 7 — nombre", "icon_6": "Salida 7 — icono", "test_6": "Salida 7 — pulso de prueba",
-          "name_7": "Salida 8 — nombre", "icon_7": "Salida 8 — icono", "test_7": "Salida 8 — pulso de prueba",
-          "name_8": "Salida 9 — nombre", "icon_8": "Salida 9 — icono", "test_8": "Salida 9 — pulso de prueba",
-          "name_9": "Salida 10 — nombre", "icon_9": "Salida 10 — icono", "test_9": "Salida 10 — pulso de prueba",
-          "name_10": "Salida 11 — nombre", "icon_10": "Salida 11 — icono", "test_10": "Salida 11 — pulso de prueba",
-          "name_11": "Salida 12 — nombre", "icon_11": "Salida 12 — icono", "test_11": "Salida 12 — pulso de prueba",
-          "name_12": "Salida 13 — nombre", "icon_12": "Salida 13 — icono", "test_12": "Salida 13 — pulso de prueba",
-          "name_13": "Salida 14 — nombre", "icon_13": "Salida 14 — icono", "test_13": "Salida 14 — pulso de prueba",
-          "name_14": "Salida 15 — nombre", "icon_14": "Salida 15 — icono", "test_14": "Salida 15 — pulso de prueba",
-          "name_15": "Salida 16 — nombre", "icon_15": "Salida 16 — icono", "test_15": "Salida 16 — pulso de prueba"
+          "modules": "Módulos (id:outputs)"
+        }
+      },
+      "upload": {
+        "title": "Importar JSON del proyecto",
+        "description": "Selecciona tu archivo JSON de proyecto Domoriks.",
+        "data": {
+          "config_file": "Archivo JSON del proyecto"
         }
       }
     },
     "error": {
-      "invalid_modules": "Los módulos deben tener el formato [id]:[outputs]",
-      "module_unreachable": "El módulo {module_id} no responde. Comprueba el cableado. Puedes eliminarlo o continuar."
+      "invalid_modules": "Los módulos deben tener el formato id:outputs.",
+      "invalid_json": "No se pudo analizar JSON — asegúrate de que sea un JSON de proyecto válido.",
+      "no_modules_found": "No se encontraron módulos de salida en el JSON.",
+      "file_selector_not_supported": "La carga de archivos no es compatible en esta interfaz."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Opciones Domoriks",
-        "description": "Ajusta el sondeo y la configuración de módulos.",
+        "description": "Ajusta los parámetros de sondeo y elige cómo actualizar los módulos.",
         "data": {
           "poll_interval": "Intervalo de sondeo (segundos)",
           "reconnect_interval": "Intervalo de reconexión (segundos)",
-          "modules": "Módulos ([id]:[outputs])"
+          "setup_mode": "Configuración de módulos"
         }
       },
-      "module": {
-        "title": "Módulo {module_id} — {outputs} salidas",
-        "description": "Estado: {status}\n\nEscribe un nombre e icono por salida. Activa el interruptor de pulso para identificar físicamente una salida.",
+      "manual": {
+        "title": "Configurar módulos manualmente",
+        "description": "Introduce los IDs de módulo y número de salidas como `id:outputs`, separados por comas.",
         "data": {
-          "remove_module": "⚠ Eliminar este módulo de la configuración",
-          "name_0": "Salida 1 — nombre", "icon_0": "Salida 1 — icono", "test_0": "Salida 1 — pulso de prueba",
-          "name_1": "Salida 2 — nombre", "icon_1": "Salida 2 — icono", "test_1": "Salida 2 — pulso de prueba",
-          "name_2": "Salida 3 — nombre", "icon_2": "Salida 3 — icono", "test_2": "Salida 3 — pulso de prueba",
-          "name_3": "Salida 4 — nombre", "icon_3": "Salida 4 — icono", "test_3": "Salida 4 — pulso de prueba",
-          "name_4": "Salida 5 — nombre", "icon_4": "Salida 5 — icono", "test_4": "Salida 5 — pulso de prueba",
-          "name_5": "Salida 6 — nombre", "icon_5": "Salida 6 — icono", "test_5": "Salida 6 — pulso de prueba",
-          "name_6": "Salida 7 — nombre", "icon_6": "Salida 7 — icono", "test_6": "Salida 7 — pulso de prueba",
-          "name_7": "Salida 8 — nombre", "icon_7": "Salida 8 — icono", "test_7": "Salida 8 — pulso de prueba",
-          "name_8": "Salida 9 — nombre", "icon_8": "Salida 9 — icono", "test_8": "Salida 9 — pulso de prueba",
-          "name_9": "Salida 10 — nombre", "icon_9": "Salida 10 — icono", "test_9": "Salida 10 — pulso de prueba",
-          "name_10": "Salida 11 — nombre", "icon_10": "Salida 11 — icono", "test_10": "Salida 11 — pulso de prueba",
-          "name_11": "Salida 12 — nombre", "icon_11": "Salida 12 — icono", "test_11": "Salida 12 — pulso de prueba",
-          "name_12": "Salida 13 — nombre", "icon_12": "Salida 13 — icono", "test_12": "Salida 13 — pulso de prueba",
-          "name_13": "Salida 14 — nombre", "icon_13": "Salida 14 — icono", "test_13": "Salida 14 — pulso de prueba",
-          "name_14": "Salida 15 — nombre", "icon_14": "Salida 15 — icono", "test_14": "Salida 15 — pulso de prueba",
-          "name_15": "Salida 16 — nombre", "icon_15": "Salida 16 — icono", "test_15": "Salida 16 — pulso de prueba"
+          "modules": "Módulos (id:outputs)"
+        }
+      },
+      "upload": {
+        "title": "Importar JSON del proyecto",
+        "description": "Selecciona tu archivo JSON de proyecto Domoriks.",
+        "data": {
+          "import_file": "Archivo JSON del proyecto"
         }
       }
     },
     "error": {
-      "invalid_modules": "Los módulos deben tener el formato [id]:[outputs]",
-      "module_unreachable": "El módulo {module_id} no responde. Comprueba el cableado. Puedes eliminarlo o continuar."
+      "invalid_modules": "Los módulos deben tener el formato id:outputs.",
+      "invalid_json": "No se pudo analizar JSON — asegúrate de que sea un JSON de proyecto válido.",
+      "no_modules_found": "No se encontraron módulos de salida en el JSON.",
+      "file_selector_not_supported": "La carga de archivos no es compatible en esta interfaz."
     }
   },
   "services": {

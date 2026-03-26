@@ -1,85 +1,71 @@
 {
   "title": "Domoriks",
   "config": {
-    "error": {
-      "invalid_modules": "Modules moeten het formaat [id]:[outputs] hebben",
-      "module_unreachable": "Module {module_id} reageert niet. Controleer de bedrading. U kunt het verwijderen of toch doorgaan."
-    },
     "step": {
       "user": {
-        "title": "Domoriks-opties",
-        "description": "Pas polling en moduleconfiguratie aan.",
+        "title": "Domoriks instellen",
+        "description": "Voer verbindingsinstellingen in en kies hoe u modules configureert.",
         "data": {
           "port": "Seriële poort",
           "baudrate": "Baudrate",
           "poll_interval": "Poll-interval (seconden)",
           "reconnect_interval": "Interval voor opnieuw verbinden (seconden)",
-          "modules": "Modules ([id]:[outputs])"
+          "setup_mode": "Moduleconfiguratie"
         }
       },
-      "module": {
-        "title": "Module {module_id} — {outputs} uitgangen",
-        "description": "Status: {status}\n\nGeef een naam en icoon per uitgang. Activeer de pulsschakelaar om een uitgang kort te testen voor identificatie.",
+      "manual": {
+        "title": "Modules handmatig configureren",
+        "description": "Voer module-ID's en aantal uitgangen in als `id:outputs`, gescheiden door komma's.",
         "data": {
-          "remove_module": "⚠ Deze module verwijderen uit de installatie",
-          "name_0": "Uitgang 1 — naam", "icon_0": "Uitgang 1 — icoon", "test_0": "Uitgang 1 — pulstest",
-          "name_1": "Uitgang 2 — naam", "icon_1": "Uitgang 2 — icoon", "test_1": "Uitgang 2 — pulstest",
-          "name_2": "Uitgang 3 — naam", "icon_2": "Uitgang 3 — icoon", "test_2": "Uitgang 3 — pulstest",
-          "name_3": "Uitgang 4 — naam", "icon_3": "Uitgang 4 — icoon", "test_3": "Uitgang 4 — pulstest",
-          "name_4": "Uitgang 5 — naam", "icon_4": "Uitgang 5 — icoon", "test_4": "Uitgang 5 — pulstest",
-          "name_5": "Uitgang 6 — naam", "icon_5": "Uitgang 6 — icoon", "test_5": "Uitgang 6 — pulstest",
-          "name_6": "Uitgang 7 — naam", "icon_6": "Uitgang 7 — icoon", "test_6": "Uitgang 7 — pulstest",
-          "name_7": "Uitgang 8 — naam", "icon_7": "Uitgang 8 — icoon", "test_7": "Uitgang 8 — pulstest",
-          "name_8": "Uitgang 9 — naam", "icon_8": "Uitgang 9 — icoon", "test_8": "Uitgang 9 — pulstest",
-          "name_9": "Uitgang 10 — naam", "icon_9": "Uitgang 10 — icoon", "test_9": "Uitgang 10 — pulstest",
-          "name_10": "Uitgang 11 — naam", "icon_10": "Uitgang 11 — icoon", "test_10": "Uitgang 11 — pulstest",
-          "name_11": "Uitgang 12 — naam", "icon_11": "Uitgang 12 — icoon", "test_11": "Uitgang 12 — pulstest",
-          "name_12": "Uitgang 13 — naam", "icon_12": "Uitgang 13 — icoon", "test_12": "Uitgang 13 — pulstest",
-          "name_13": "Uitgang 14 — naam", "icon_13": "Uitgang 14 — icoon", "test_13": "Uitgang 14 — pulstest",
-          "name_14": "Uitgang 15 — naam", "icon_14": "Uitgang 15 — icoon", "test_14": "Uitgang 15 — pulstest",
-          "name_15": "Uitgang 16 — naam", "icon_15": "Uitgang 16 — icoon", "test_15": "Uitgang 16 — pulstest"
+          "modules": "Modules (id:outputs)"
+        }
+      },
+      "upload": {
+        "title": "Project JSON importeren",
+        "description": "Selecteer uw Domoriks project JSON-bestand.",
+        "data": {
+          "config_file": "Project JSON-bestand"
         }
       }
+    },
+    "error": {
+      "invalid_modules": "Modules moeten het formaat id:outputs hebben.",
+      "invalid_json": "Kon JSON niet ontleden — controleer of het geldige project-JSON is.",
+      "no_modules_found": "Geen outputmodules gevonden in het geüploade JSON.",
+      "file_selector_not_supported": "Bestandsupload wordt niet ondersteund in deze frontend."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Domoriks-opties",
-        "description": "Pas polling en moduleconfiguratie aan.",
+        "description": "Pas polling-instellingen aan en kies hoe u modules bijwerkt.",
         "data": {
           "poll_interval": "Poll-interval (seconden)",
           "reconnect_interval": "Interval voor opnieuw verbinden (seconden)",
-          "modules": "Modules ([id]:[outputs])"
+          "setup_mode": "Moduleconfiguratie"
         }
       },
-      "module": {
-        "title": "Module {module_id} — {outputs} uitgangen",
-        "description": "Status: {status}\n\nGeef een naam en icoon per uitgang. Activeer de pulsschakelaar om een uitgang kort te testen voor identificatie.",
+      "manual": {
+        "title": "Modules handmatig configureren",
+        "description": "Voer module-ID's en aantal uitgangen in als `id:outputs`, gescheiden door komma's.",
         "data": {
-          "remove_module": "⚠ Deze module verwijderen uit de installatie",
-          "name_0": "Uitgang 1 — naam", "icon_0": "Uitgang 1 — icoon", "test_0": "Uitgang 1 — pulstest",
-          "name_1": "Uitgang 2 — naam", "icon_1": "Uitgang 2 — icoon", "test_1": "Uitgang 2 — pulstest",
-          "name_2": "Uitgang 3 — naam", "icon_2": "Uitgang 3 — icoon", "test_2": "Uitgang 3 — pulstest",
-          "name_3": "Uitgang 4 — naam", "icon_3": "Uitgang 4 — icoon", "test_3": "Uitgang 4 — pulstest",
-          "name_4": "Uitgang 5 — naam", "icon_4": "Uitgang 5 — icoon", "test_4": "Uitgang 5 — pulstest",
-          "name_5": "Uitgang 6 — naam", "icon_5": "Uitgang 6 — icoon", "test_5": "Uitgang 6 — pulstest",
-          "name_6": "Uitgang 7 — naam", "icon_6": "Uitgang 7 — icoon", "test_6": "Uitgang 7 — pulstest",
-          "name_7": "Uitgang 8 — naam", "icon_7": "Uitgang 8 — icoon", "test_7": "Uitgang 8 — pulstest",
-          "name_8": "Uitgang 9 — naam", "icon_8": "Uitgang 9 — icoon", "test_8": "Uitgang 9 — pulstest",
-          "name_9": "Uitgang 10 — naam", "icon_9": "Uitgang 10 — icoon", "test_9": "Uitgang 10 — pulstest",
-          "name_10": "Uitgang 11 — naam", "icon_10": "Uitgang 11 — icoon", "test_10": "Uitgang 11 — pulstest",
-          "name_11": "Uitgang 12 — naam", "icon_11": "Uitgang 12 — icoon", "test_11": "Uitgang 12 — pulstest",
-          "name_12": "Uitgang 13 — naam", "icon_12": "Uitgang 13 — icoon", "test_12": "Uitgang 13 — pulstest",
-          "name_13": "Uitgang 14 — naam", "icon_13": "Uitgang 14 — icoon", "test_13": "Uitgang 14 — pulstest",
-          "name_14": "Uitgang 15 — naam", "icon_14": "Uitgang 15 — icoon", "test_14": "Uitgang 15 — pulstest",
-          "name_15": "Uitgang 16 — naam", "icon_15": "Uitgang 16 — icoon", "test_15": "Uitgang 16 — pulstest"
+          "modules": "Modules (id:outputs)"
+        }
+      },
+      "upload": {
+        "title": "Project JSON importeren",
+        "description": "Selecteer uw Domoriks project JSON-bestand.",
+        "data": {
+          "import_file": "Project JSON-bestand"
         }
       }
     },
     "error": {
-      "invalid_modules": "Modules moeten het formaat [id]:[outputs] hebben",
-      "module_unreachable": "Module {module_id} reageert niet. Controleer de bedrading. U kunt het verwijderen of toch doorgaan."
+      "invalid_modules": "Modules moeten het formaat id:outputs hebben.",
+      "invalid_json": "Kon JSON niet ontleden — controleer of het geldige project-JSON is.",
+      "no_modules_found": "Geen outputmodules gevonden in het geüploade JSON.",
+      "file_selector_not_supported": "Bestandsupload wordt niet ondersteund in deze frontend."
     }
   },
   "services": {

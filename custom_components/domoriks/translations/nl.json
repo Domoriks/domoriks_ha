@@ -1,0 +1,83 @@
+{
+  "title": "Domoriks",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Domoriks instellen",
+        "description": "Voer verbindingsinstellingen in en kies hoe u modules configureert.",
+        "data": {
+          "port": "Seriële poort",
+          "baudrate": "Baudrate",
+          "poll_interval": "Poll-interval (seconden)",
+          "reconnect_interval": "Interval voor opnieuw verbinden (seconden)",
+          "setup_mode": "Moduleconfiguratie"
+        }
+      },
+      "manual": {
+        "title": "Modules handmatig configureren",
+        "description": "Voer module-ID's en aantal uitgangen in als `id:outputs`, gescheiden door komma's.",
+        "data": {
+          "modules": "Modules (id:outputs)"
+        }
+      },
+      "upload": {
+        "title": "Project JSON importeren",
+        "description": "Selecteer uw Domoriks project JSON-bestand.",
+        "data": {
+          "config_file": "Project JSON-bestand"
+        }
+      }
+    },
+    "error": {
+      "invalid_modules": "Modules moeten het formaat id:outputs hebben.",
+      "invalid_json": "Kon JSON niet ontleden — controleer of het geldige project-JSON is.",
+      "no_modules_found": "Geen outputmodules gevonden in het geüploade JSON.",
+      "file_selector_not_supported": "Bestandsupload wordt niet ondersteund in deze frontend."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Domoriks-opties",
+        "description": "Pas polling-instellingen aan en kies hoe u modules bijwerkt.",
+        "data": {
+          "poll_interval": "Poll-interval (seconden)",
+          "reconnect_interval": "Interval voor opnieuw verbinden (seconden)",
+          "setup_mode": "Moduleconfiguratie"
+        }
+      },
+      "manual": {
+        "title": "Modules handmatig configureren",
+        "description": "Voer module-ID's en aantal uitgangen in als `id:outputs`, gescheiden door komma's.",
+        "data": {
+          "modules": "Modules (id:outputs)"
+        }
+      },
+      "upload": {
+        "title": "Project JSON importeren",
+        "description": "Selecteer uw Domoriks project JSON-bestand.",
+        "data": {
+          "import_file": "Project JSON-bestand"
+        }
+      }
+    },
+    "error": {
+      "invalid_modules": "Modules moeten het formaat id:outputs hebben.",
+      "invalid_json": "Kon JSON niet ontleden — controleer of het geldige project-JSON is.",
+      "no_modules_found": "Geen outputmodules gevonden in het geüploade JSON.",
+      "file_selector_not_supported": "Bestandsupload wordt niet ondersteund in deze frontend."
+    }
+  },
+  "services": {
+    "command": {
+      "name": "Commando verzenden",
+      "description": "Stuur een ruwe Domoriks-opdracht (bijv. rc 64 0 16).",
+      "fields": {
+        "command": {
+          "name": "Commando",
+          "description": "Commando in de vorm 'cmd slave address data'."
+        }
+      }
+    }
+  }
+}

@@ -16,17 +16,12 @@ from .command_parser import parse_command
 from .const import (
     CONF_BAUDRATE,
     CONF_MODULE_ID,
-    CONF_OUTPUT_ICONS,
     CONF_OUTPUT_NAMES,
     CONF_MODULES,
-    CONF_MODULE_IDS,
     CONF_OUTPUTS,
-    CONF_OUTPUTS_PER_MODULE,
     CONF_POLL_INTERVAL,
     CONF_PORT,
     CONF_RECONNECT_INTERVAL,
-    DEFAULT_MODULE_IDS,
-    DEFAULT_OUTPUTS_PER_MODULE,
     DEFAULT_POLL_INTERVAL,
     DEFAULT_RECONNECT_INTERVAL,
     DOMAIN,
@@ -57,7 +52,6 @@ class ModuleConfig:
     module_id: int
     outputs: int
     output_names: dict = field(default_factory=dict)
-    output_icons: dict = field(default_factory=dict)
 
     @property
     def coil_count(self) -> int:
@@ -81,25 +75,14 @@ class DomoriksHub:
             self.modules: List[ModuleConfig] = [
                 ModuleConfig(
                     module_id=int(module.get(CONF_MODULE_ID)),
-                    outputs=int(module.get(CONF_OUTPUTS, DEFAULT_OUTPUTS_PER_MODULE)),
+                    outputs=int(module.get(CONF_OUTPUTS, 6)),
                     output_names=dict(module.get(CONF_OUTPUT_NAMES, {})),
-                    output_icons=dict(module.get(CONF_OUTPUT_ICONS, {})),
                 )
                 for module in raw_modules
                 if module.get(CONF_MODULE_ID) is not None
             ]
         else:
-            module_ids = entry_data.get(CONF_MODULE_IDS, DEFAULT_MODULE_IDS)
-            outputs_per_module = int(
-                entry_data.get(CONF_OUTPUTS_PER_MODULE, DEFAULT_OUTPUTS_PER_MODULE)
-            )
-            self.modules = [
-                ModuleConfig(
-                    module_id=int(module_id),
-                    outputs=outputs_per_module,
-                )
-                for module_id in module_ids
-            ]
+            self.modules = []
         self.module_ids: List[int] = [module.module_id for module in self.modules]
 
         raw_poll = entry_data.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL)

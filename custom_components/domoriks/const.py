@@ -9,13 +9,10 @@ DOMAIN: Final = "domoriks"
 
 CONF_PORT: Final = "port"
 CONF_BAUDRATE: Final = "baudrate"
-CONF_MODULE_IDS: Final = "module_ids"
 CONF_MODULES: Final = "modules"  # preferred structure: list of module dicts
 CONF_MODULE_ID: Final = "id"
 CONF_OUTPUTS: Final = "outputs"
 CONF_OUTPUT_NAMES: Final = "output_names"   # dict[str(index), friendly_name]
-CONF_OUTPUT_ICONS: Final = "output_icons"   # dict[str(index), mdi:xxx]
-CONF_OUTPUTS_PER_MODULE: Final = "outputs_per_module"
 CONF_POLL_INTERVAL: Final = "poll_interval"
 CONF_RECONNECT_INTERVAL: Final = "reconnect_interval"
 
@@ -24,14 +21,6 @@ DEFAULT_BAUDRATE: Final = 115200
 DEFAULT_OUTPUTS_PER_MODULE: Final = 6
 DEFAULT_POLL_INTERVAL: Final = timedelta(seconds=15)
 DEFAULT_RECONNECT_INTERVAL: Final = 3
-DEFAULT_MODULE_IDS: Final[list[int]] = [64, 65, 66, 67, 68]
-DEFAULT_MODULES: Final[list[dict[str, int]]] = [
-    {
-        CONF_MODULE_ID: module_id,
-        CONF_OUTPUTS: DEFAULT_OUTPUTS_PER_MODULE,
-    }
-    for module_id in DEFAULT_MODULE_IDS
-]
 
 READ_COILS: Final = 0x01
 READ_DISC_INPUTS: Final = 0x02

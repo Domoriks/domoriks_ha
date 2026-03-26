@@ -1,43 +1,61 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
+import logging
 
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import selector
+
+from homeassistant.components.file_upload import process_uploaded_file
+
+from .project_json_parser import modules_from_project_json, parse_json_upload
 
 from .const import (
     CONF_BAUDRATE,
     CONF_MODULE_ID,
     CONF_MODULES,
-    CONF_MODULE_IDS,
-    CONF_OUTPUT_ICONS,
     CONF_OUTPUT_NAMES,
     CONF_OUTPUTS,
-    CONF_OUTPUTS_PER_MODULE,
     CONF_POLL_INTERVAL,
     CONF_PORT,
     CONF_RECONNECT_INTERVAL,
     DEFAULT_BAUDRATE,
-    DEFAULT_MODULES,
     DEFAULT_OUTPUTS_PER_MODULE,
     DEFAULT_POLL_INTERVAL,
     DEFAULT_PORT,
     DEFAULT_RECONNECT_INTERVAL,
     DOMAIN,
 )
-from .hub import DomoriksHub
+
+_LOGGER = logging.getLogger(__name__)
+
+# Setup-mode selector used in the first step of both flows.
+_SETUP_MODE_SELECTOR = selector.SelectSelector(
+    selector.SelectSelectorConfig(options=["manual", "upload"])
+)
+
+# File selector for JSON import.
+_FileSelectorClass = getattr(selector, "FileSelector", None)
+_FileSelectorConfigClass = getattr(selector, "FileSelectorConfig", None)
+if _FileSelectorClass is not None and _FileSelectorConfigClass is not None:
+    _JSON_FILE_SELECTOR = _FileSelectorClass(_FileSelectorConfigClass(accept=".json"))
+else:
+    _JSON_FILE_SELECTOR = None
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _parse_modules(value: str | None) -> List[Dict[str, Any]]:
+def _parse_modules(value: str | None) -> list[dict[str, Any]]:
+    """Parse 'id:outputs, id:outputs, ...' into module dicts."""
     if not value:
         return []
-    modules: List[Dict[str, Any]] = []
+    modules: list[dict[str, Any]] = []
     for part in value.split(","):
         part = part.strip()
         if not part:
@@ -51,153 +69,73 @@ def _parse_modules(value: str | None) -> List[Dict[str, Any]]:
     return modules
 
 
-def _modules_to_text(modules: List[Dict[str, Any]]) -> str:
-    parts: List[str] = []
+def _modules_to_text(modules: list[dict[str, Any]]) -> str:
+    """Convert module dicts back to 'id:outputs, ...' text."""
+    parts: list[str] = []
     for module in modules:
         outputs = module.get(CONF_OUTPUTS, DEFAULT_OUTPUTS_PER_MODULE)
         module_id = module.get(CONF_MODULE_ID)
         parts.append(f"{module_id}:{outputs}")
-    return ",".join(parts)
-
-
-# Default icon pre-filled in the setup form.
-DEFAULT_OUTPUT_ICON = "mdi:toggle-switch"
-
-
-def _build_module_schema(module: dict, prefill: dict, is_reachable: bool) -> vol.Schema:
-    """Build per-output individual name / icon / test-toggle schema."""
-    outputs: int = module[CONF_OUTPUTS]
-    existing_names: dict = module.get(CONF_OUTPUT_NAMES, {})
-    existing_icons: dict = module.get(CONF_OUTPUT_ICONS, {})
-
-    schema_dict: dict = {}
-
-    if not is_reachable:
-        schema_dict[vol.Optional("remove_module", default=False)] = bool
-
-    for i in range(outputs):
-        default_name = (
-            prefill.get(f"name_{i}")
-            or existing_names.get(str(i))
-            or f"Output {i + 1}"
-        )
-        default_icon = (
-            prefill.get(f"icon_{i}")
-            or existing_icons.get(str(i))
-            or DEFAULT_OUTPUT_ICON
-        )
-        schema_dict[vol.Optional(f"name_{i}", default=default_name)] = str
-        schema_dict[vol.Optional(f"icon_{i}", default=default_icon)] = str
-
-    return vol.Schema(schema_dict)
-
-
-class _ModuleNamingMixin:
-    """Shared per-module naming step for ConfigFlow and OptionsFlow."""
-
-    _modules_pending: list
-    _modules_done: list
-    _current_input: dict
-
-    def _hub_for_test(self) -> Optional[DomoriksHub]:
-        """Return a connected hub for test pulses. Override in subclass."""
-        return None
-
-    async def _check_reachable(self, module_id: int, outputs: int) -> bool:
-        hub = self._hub_for_test()
-        if not hub or not hub.is_connected:
-            return False
-        try:
-            await hub.async_read_coils(module_id, 0, max(outputs, 1))
-            return True
-        except Exception:  # noqa: BLE001
-            return False
-
-    async def async_step_module(
-        self, user_input: dict[str, Any] | None = None
-    ) -> "FlowResult":
-        if not self._modules_pending:
-            return self._finalize()
-
-        module = self._modules_pending[0]
-        module_id: int = module[CONF_MODULE_ID]
-        outputs: int = module[CONF_OUTPUTS]
-        is_reachable = await self._check_reachable(module_id, outputs)
-
-        if user_input is not None:
-            # User chose to remove an unreachable module.
-            if user_input.get("remove_module", False):
-                self._modules_pending.pop(0)
-                self._current_input = {}
-                return await self.async_step_module()
-
-            self._current_input = dict(user_input)
-
-            # Save names + icons and advance to next module.
-            output_names = {
-                str(i): (self._current_input.get(f"name_{i}") or f"Output {i + 1}").strip()
-                for i in range(outputs)
-            }
-            output_icons = {
-                str(i): (self._current_input.get(f"icon_{i}") or DEFAULT_OUTPUT_ICON).strip()
-                for i in range(outputs)
-            }
-            self._modules_done.append(
-                {
-                    **module,
-                    CONF_OUTPUT_NAMES: output_names,
-                    CONF_OUTPUT_ICONS: output_icons,
-                }
-            )
-            self._modules_pending.pop(0)
-            self._current_input = {}
-            return await self.async_step_module()
-
-        return self._show_module_form(module, is_reachable)
-
-    def _show_module_form(
-        self,
-        module: dict,
-        is_reachable: bool,
-    ) -> "FlowResult":
-        module_id: int = module[CONF_MODULE_ID]
-        outputs: int = module[CONF_OUTPUTS]
-        status = "✓ Reachable" if is_reachable else "✗ Not responding"
-
-        return self.async_show_form(
-            step_id="module",
-            data_schema=_build_module_schema(module, self._current_input, is_reachable),
-            errors={"base": "module_unreachable"} if not is_reachable else {},
-            description_placeholders={
-                "module_id": str(module_id),
-                "outputs": str(outputs),
-                "status": status,
-            },
-        )
+    return ", ".join(parts)
 
 
 # ---------------------------------------------------------------------------
 # Config flow (initial setup)
 # ---------------------------------------------------------------------------
 
-class DomoriksConfigFlow(_ModuleNamingMixin, config_entries.ConfigFlow, domain=DOMAIN):
-    """Multi-step setup: connection → per-module naming / toggle."""
+class DomoriksConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Setup: connection settings → manual or file upload."""
 
     VERSION = 1
 
     def __init__(self) -> None:
-        self._import_data: dict[str, Any] | None = None
         self._connection_data: dict[str, Any] = {}
-        self._modules_pending: list[dict] = []
-        self._modules_done: list[dict] = []
-        self._hub: Optional[DomoriksHub] = None
-        self._current_input: dict[str, Any] = {}
 
     # ------------------------------------------------------------------
-    # Step 1 – connection + modules list
+    # Step 1 – connection settings + mode selection
     # ------------------------------------------------------------------
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_PORT])
+            self._abort_if_unique_id_configured()
+
+            self._connection_data = {
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_BAUDRATE: user_input[CONF_BAUDRATE],
+                CONF_POLL_INTERVAL: user_input[CONF_POLL_INTERVAL],
+                CONF_RECONNECT_INTERVAL: user_input[CONF_RECONNECT_INTERVAL],
+            }
+
+            if user_input.get("setup_mode") == "upload":
+                return await self.async_step_upload()
+            return await self.async_step_manual()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): str,
+                    vol.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): int,
+                    vol.Required(
+                        CONF_POLL_INTERVAL, default=int(DEFAULT_POLL_INTERVAL.total_seconds())
+                    ): vol.Coerce(int),
+                    vol.Required(
+                        CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL
+                    ): vol.Coerce(float),
+                    vol.Required("setup_mode", default="upload"): _SETUP_MODE_SELECTOR,
+                }
+            ),
+            errors=errors,
+        )
+
+    # ------------------------------------------------------------------
+    # Step 2a – manual module list
+    # ------------------------------------------------------------------
+
+    async def async_step_manual(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -209,112 +147,97 @@ class DomoriksConfigFlow(_ModuleNamingMixin, config_entries.ConfigFlow, domain=D
 
             if not errors:
                 if not modules:
-                    modules = DEFAULT_MODULES
-
-                await self.async_set_unique_id(user_input[CONF_PORT])
-                self._abort_if_unique_id_configured()
-
-                self._connection_data = {
-                    CONF_PORT: user_input[CONF_PORT],
-                    CONF_BAUDRATE: user_input[CONF_BAUDRATE],
-                    CONF_POLL_INTERVAL: user_input[CONF_POLL_INTERVAL],
-                    CONF_RECONNECT_INTERVAL: user_input[CONF_RECONNECT_INTERVAL],
-                }
-
-                # Start a temporary hub to probe reachability and enable test toggles.
-                if self._hub:
-                    await self._hub.async_stop()
-                self._hub = DomoriksHub(
-                    self.hass,
-                    {**self._connection_data, CONF_MODULES: modules},
-                )
-                await self._hub.async_start()
-                await self._hub.async_wait_connected(timeout=5.0)
-
-                self._modules_pending = list(modules)
-                self._modules_done = []
-                self._current_input = {}
-                return await self.async_step_module()
-
-        defaults = {
-            CONF_PORT: DEFAULT_PORT,
-            CONF_BAUDRATE: DEFAULT_BAUDRATE,
-            CONF_POLL_INTERVAL: int(DEFAULT_POLL_INTERVAL.total_seconds()),
-            CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
-            CONF_MODULES: _modules_to_text(DEFAULT_MODULES),
-        }
+                    errors[CONF_MODULES] = "invalid_modules"
+                else:
+                    return self.async_create_entry(
+                        title="Domoriks",
+                        data={**self._connection_data, CONF_MODULES: modules},
+                    )
 
         return self.async_show_form(
-            step_id="user",
+            step_id="manual",
             data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_PORT, default=defaults[CONF_PORT]): str,
-                    vol.Required(CONF_BAUDRATE, default=defaults[CONF_BAUDRATE]): int,
-                    vol.Required(
-                        CONF_POLL_INTERVAL, default=defaults[CONF_POLL_INTERVAL]
-                    ): vol.Coerce(int),
-                    vol.Required(
-                        CONF_RECONNECT_INTERVAL,
-                        default=defaults[CONF_RECONNECT_INTERVAL],
-                    ): vol.Coerce(float),
-                    vol.Optional(
-                        CONF_MODULES,
-                        default=defaults[CONF_MODULES],
-                    ): str,
-                }
+                {vol.Required(CONF_MODULES, default="64:6, 65:6"): str}
             ),
             errors=errors,
         )
 
-    def _hub_for_test(self) -> Optional[DomoriksHub]:
-        return self._hub
+    # ------------------------------------------------------------------
+    # Step 2b – file upload
+    # ------------------------------------------------------------------
 
-    def _finalize(self) -> FlowResult:
-        if self._hub:
-            self.hass.async_create_task(self._hub.async_stop())
-            self._hub = None
-        return self.async_create_entry(
-            title="Domoriks",
-            data={**self._connection_data, CONF_MODULES: self._modules_done},
+    async def async_step_upload(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        errors: dict[str, str] = {}
+
+        if _JSON_FILE_SELECTOR is None:
+            errors["base"] = "file_selector_not_supported"
+            return self.async_show_form(
+                step_id="upload",
+                data_schema=vol.Schema({}),
+                errors=errors,
+            )
+
+        if user_input is not None:
+            config_file = user_input.get("config_file")
+            if config_file:
+                try:
+                    with process_uploaded_file(self.hass, config_file) as file_path:
+                        content = await self.hass.async_add_executor_job(
+                            file_path.read_text, "utf-8"
+                        )
+                    parsed = parse_json_upload(content)
+                    modules = modules_from_project_json(parsed)
+                except Exception as err:
+                    _LOGGER.warning("JSON parse failed (%s): %.200r", err, config_file)
+                    errors["config_file"] = "invalid_json"
+                    modules = []
+
+                if not errors:
+                    if not modules:
+                        errors["config_file"] = "no_modules_found"
+                    else:
+                        return self.async_create_entry(
+                            title="Domoriks",
+                            data={**self._connection_data, CONF_MODULES: modules},
+                        )
+            else:
+                errors["config_file"] = "invalid_json"
+
+        return self.async_show_form(
+            step_id="upload",
+            data_schema=vol.Schema(
+                {vol.Required("config_file"): _JSON_FILE_SELECTOR}
+            ),
+            errors=errors,
         )
 
-    async def async_remove(self) -> None:
-        """Clean up temporary hub when flow is aborted."""
-        if self._hub:
-            await self._hub.async_stop()
-            self._hub = None
+    # ------------------------------------------------------------------
+    # YAML import (backward compatibility)
+    # ------------------------------------------------------------------
 
-    async def async_step_import(self, import_config: Dict[str, Any]) -> FlowResult:
-        self._import_data = import_config
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
+        modules: list[dict[str, Any]] = []
 
-        modules: List[Dict[str, Any]] = []
-        raw_modules = import_config.get(CONF_MODULES)
-        if isinstance(raw_modules, list):
-            modules = [
-                {
-                    CONF_MODULE_ID: int(module.get(CONF_MODULE_ID)),
-                    CONF_OUTPUTS: int(module.get(CONF_OUTPUTS, DEFAULT_OUTPUTS_PER_MODULE)),
-                }
-                for module in raw_modules
-                if module.get(CONF_MODULE_ID) is not None
-            ]
-        elif isinstance(raw_modules, str):
+        if import_config.get("modules"):
             try:
-                modules = _parse_modules(raw_modules)
-            except ValueError:
+                modules = modules_from_project_json(import_config)
+            except Exception:
                 modules = []
-        elif import_config.get("module_ids"):
-            outputs = int(import_config.get(CONF_OUTPUTS_PER_MODULE, DEFAULT_OUTPUTS_PER_MODULE))
-            modules = [
-                {
-                    CONF_MODULE_ID: int(module_id),
-                    CONF_OUTPUTS: outputs,
-                }
-                for module_id in import_config.get("module_ids", [])
-            ]
 
         if not modules:
-            modules = DEFAULT_MODULES
+            raw_modules = import_config.get(CONF_MODULES)
+            if isinstance(raw_modules, list):
+                modules = [
+                    {
+                        CONF_MODULE_ID: int(m.get(CONF_MODULE_ID)),
+                        CONF_OUTPUTS: int(m.get(CONF_OUTPUTS, DEFAULT_OUTPUTS_PER_MODULE)),
+                    }
+                    for m in raw_modules
+                    if m.get(CONF_MODULE_ID) is not None
+                ]
+
+        if not modules:
+            return self.async_abort(reason="no_modules_found")
 
         data = {
             CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
@@ -344,32 +267,50 @@ class DomoriksConfigFlow(_ModuleNamingMixin, config_entries.ConfigFlow, domain=D
 # Options flow (reconfigure after setup)
 # ---------------------------------------------------------------------------
 
-class DomoriksOptionsFlow(_ModuleNamingMixin, config_entries.OptionsFlow):
-    """Options: poll/reconnect settings + per-module naming (same module step)."""
+class DomoriksOptionsFlow(config_entries.OptionsFlow):
+    """Options: poll/reconnect settings + manual or file re-import."""
 
     def __init__(self, entry: config_entries.ConfigEntry) -> None:
         self.entry = entry
-        self._modules_pending: list[dict] = []
-        self._modules_done: list[dict] = []
-        self._current_input: dict[str, Any] = {}
         self._poll_interval: int = int(DEFAULT_POLL_INTERVAL.total_seconds())
         self._reconnect_interval: float = float(DEFAULT_RECONNECT_INTERVAL)
 
-    @property
-    def _hub(self) -> Optional[DomoriksHub]:
-        runtime = getattr(self.entry, "runtime_data", None)
-        return runtime.hub if runtime else None
-
     # ------------------------------------------------------------------
-    # Step 1 – connection settings + modules text
+    # Step 1 – timing settings + mode selection
     # ------------------------------------------------------------------
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        current = {**self.entry.data, **self.entry.options}
+
+        if user_input is not None:
+            self._poll_interval = user_input[CONF_POLL_INTERVAL]
+            self._reconnect_interval = user_input[CONF_RECONNECT_INTERVAL]
+
+            if user_input.get("setup_mode") == "upload":
+                return await self.async_step_upload()
+            return await self.async_step_manual()
+
+        defaults_poll = int(current.get(CONF_POLL_INTERVAL, int(DEFAULT_POLL_INTERVAL.total_seconds())))
+        defaults_reconnect = float(current.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL))
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_POLL_INTERVAL, default=defaults_poll): vol.Coerce(int),
+                    vol.Required(CONF_RECONNECT_INTERVAL, default=defaults_reconnect): vol.Coerce(float),
+                    vol.Required("setup_mode", default="upload"): _SETUP_MODE_SELECTOR,
+                }
+            ),
+        )
+
+    # ------------------------------------------------------------------
+    # Step 2a – manual module list
+    # ------------------------------------------------------------------
+
+    async def async_step_manual(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         errors: dict[str, str] = {}
         current = {**self.entry.data, **self.entry.options}
-        old_module_map: dict[int, dict] = {
-            m[CONF_MODULE_ID]: m for m in current.get(CONF_MODULES, [])
-        }
 
         if user_input is not None:
             try:
@@ -379,65 +320,94 @@ class DomoriksOptionsFlow(_ModuleNamingMixin, config_entries.OptionsFlow):
                 modules = []
 
             if not errors:
-                new_modules = modules or current.get(CONF_MODULES, DEFAULT_MODULES)
-
-                # Preserve existing names/icons; per-module step handles reachability.
-                merged_modules = []
-                for m in new_modules:
-                    old = old_module_map.get(m[CONF_MODULE_ID], {})
-                    merged_modules.append(
-                        {
-                            **m,
-                            CONF_OUTPUT_NAMES: old.get(CONF_OUTPUT_NAMES, {}),
-                            CONF_OUTPUT_ICONS: old.get(CONF_OUTPUT_ICONS, {}),
-                        }
+                if not modules:
+                    errors[CONF_MODULES] = "invalid_modules"
+                else:
+                    return self.async_create_entry(
+                        title="Domoriks options",
+                        data={
+                            CONF_POLL_INTERVAL: self._poll_interval,
+                            CONF_RECONNECT_INTERVAL: self._reconnect_interval,
+                            CONF_MODULES: modules,
+                        },
                     )
 
-                self._modules_pending = merged_modules
-                self._modules_done = []
-                self._current_input = {}
-                self._poll_interval = user_input[CONF_POLL_INTERVAL]
-                self._reconnect_interval = user_input[CONF_RECONNECT_INTERVAL]
-                return await self.async_step_module()
-
-        defaults = {
-            CONF_POLL_INTERVAL: current.get(
-                CONF_POLL_INTERVAL, int(DEFAULT_POLL_INTERVAL.total_seconds())
-            ),
-            CONF_RECONNECT_INTERVAL: current.get(
-                CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL
-            ),
-            CONF_MODULES: _modules_to_text(current.get(CONF_MODULES, DEFAULT_MODULES)),
-        }
+        defaults_modules = _modules_to_text(current.get(CONF_MODULES, []))
 
         return self.async_show_form(
-            step_id="init",
+            step_id="manual",
             data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_POLL_INTERVAL,
-                        default=int(defaults[CONF_POLL_INTERVAL]),
-                    ): vol.Coerce(int),
-                    vol.Required(
-                        CONF_RECONNECT_INTERVAL,
-                        default=float(defaults[CONF_RECONNECT_INTERVAL]),
-                    ): vol.Coerce(float),
-                    vol.Optional(CONF_MODULES, default=defaults[CONF_MODULES]): str,
-                }
+                {vol.Required(CONF_MODULES, default=defaults_modules): str}
             ),
             errors=errors,
         )
 
-    def _hub_for_test(self) -> Optional[DomoriksHub]:
-        runtime = getattr(self.entry, "runtime_data", None)
-        return runtime.hub if runtime else None
+    # ------------------------------------------------------------------
+    # Step 2b – file upload
+    # ------------------------------------------------------------------
 
-    def _finalize(self) -> FlowResult:
-        return self.async_create_entry(
-            title="Domoriks options",
-            data={
-                CONF_POLL_INTERVAL: self._poll_interval,
-                CONF_RECONNECT_INTERVAL: self._reconnect_interval,
-                CONF_MODULES: self._modules_done,
-            },
+    async def async_step_upload(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        errors: dict[str, str] = {}
+        current = {**self.entry.data, **self.entry.options}
+
+        if _JSON_FILE_SELECTOR is None:
+            errors["base"] = "file_selector_not_supported"
+            return self.async_show_form(
+                step_id="upload",
+                data_schema=vol.Schema({}),
+                errors=errors,
+            )
+
+        if user_input is not None:
+            import_file = user_input.get("import_file")
+            if import_file:
+                try:
+                    with process_uploaded_file(self.hass, import_file) as file_path:
+                        content = await self.hass.async_add_executor_job(
+                            file_path.read_text, "utf-8"
+                        )
+                    parsed = parse_json_upload(content)
+                    modules = modules_from_project_json(parsed)
+                except Exception as err:
+                    _LOGGER.warning("JSON parse failed (%s): %.200r", err, import_file)
+                    errors["import_file"] = "invalid_json"
+                    modules = []
+
+                if not errors:
+                    if not modules:
+                        errors["import_file"] = "no_modules_found"
+                    else:
+                        # Merge: existing user-set names preserved.
+                        old_module_map: dict[int, dict] = {
+                            m[CONF_MODULE_ID]: m for m in current.get(CONF_MODULES, [])
+                        }
+                        merged: list[dict[str, Any]] = []
+                        for m in modules:
+                            old = old_module_map.get(m[CONF_MODULE_ID], {})
+                            merged.append(
+                                {
+                                    **m,
+                                    CONF_OUTPUT_NAMES: {
+                                        **m.get(CONF_OUTPUT_NAMES, {}),
+                                        **old.get(CONF_OUTPUT_NAMES, {}),
+                                    },
+                                }
+                            )
+                        return self.async_create_entry(
+                            title="Domoriks options",
+                            data={
+                                CONF_POLL_INTERVAL: self._poll_interval,
+                                CONF_RECONNECT_INTERVAL: self._reconnect_interval,
+                                CONF_MODULES: merged,
+                            },
+                        )
+            else:
+                errors["import_file"] = "invalid_json"
+
+        return self.async_show_form(
+            step_id="upload",
+            data_schema=vol.Schema(
+                {vol.Required("import_file"): _JSON_FILE_SELECTOR}
+            ),
+            errors=errors,
         )

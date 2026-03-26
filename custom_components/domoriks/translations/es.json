@@ -1,0 +1,83 @@
+{
+  "title": "Domoriks",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuración Domoriks",
+        "description": "Introduce los ajustes de conexión y elige cómo configurar los módulos.",
+        "data": {
+          "port": "Puerto serie",
+          "baudrate": "Baudios",
+          "poll_interval": "Intervalo de sondeo (segundos)",
+          "reconnect_interval": "Intervalo de reconexión (segundos)",
+          "setup_mode": "Configuración de módulos"
+        }
+      },
+      "manual": {
+        "title": "Configurar módulos manualmente",
+        "description": "Introduce los IDs de módulo y número de salidas como `id:outputs`, separados por comas.",
+        "data": {
+          "modules": "Módulos (id:outputs)"
+        }
+      },
+      "upload": {
+        "title": "Importar JSON del proyecto",
+        "description": "Selecciona tu archivo JSON de proyecto Domoriks.",
+        "data": {
+          "config_file": "Archivo JSON del proyecto"
+        }
+      }
+    },
+    "error": {
+      "invalid_modules": "Los módulos deben tener el formato id:outputs.",
+      "invalid_json": "No se pudo analizar JSON — asegúrate de que sea un JSON de proyecto válido.",
+      "no_modules_found": "No se encontraron módulos de salida en el JSON.",
+      "file_selector_not_supported": "La carga de archivos no es compatible en esta interfaz."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones Domoriks",
+        "description": "Ajusta los parámetros de sondeo y elige cómo actualizar los módulos.",
+        "data": {
+          "poll_interval": "Intervalo de sondeo (segundos)",
+          "reconnect_interval": "Intervalo de reconexión (segundos)",
+          "setup_mode": "Configuración de módulos"
+        }
+      },
+      "manual": {
+        "title": "Configurar módulos manualmente",
+        "description": "Introduce los IDs de módulo y número de salidas como `id:outputs`, separados por comas.",
+        "data": {
+          "modules": "Módulos (id:outputs)"
+        }
+      },
+      "upload": {
+        "title": "Importar JSON del proyecto",
+        "description": "Selecciona tu archivo JSON de proyecto Domoriks.",
+        "data": {
+          "import_file": "Archivo JSON del proyecto"
+        }
+      }
+    },
+    "error": {
+      "invalid_modules": "Los módulos deben tener el formato id:outputs.",
+      "invalid_json": "No se pudo analizar JSON — asegúrate de que sea un JSON de proyecto válido.",
+      "no_modules_found": "No se encontraron módulos de salida en el JSON.",
+      "file_selector_not_supported": "La carga de archivos no es compatible en esta interfaz."
+    }
+  },
+  "services": {
+    "command": {
+      "name": "Enviar comando",
+      "description": "Enviar un comando Domoriks sin procesar (p. ej. rc 64 0 16).",
+      "fields": {
+        "command": {
+          "name": "Comando",
+          "description": "Comando en el formato 'cmd slave address data'."
+        }
+      }
+    }
+  }
+}

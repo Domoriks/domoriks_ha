@@ -1,0 +1,83 @@
+{
+  "title": "Domoriks",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuration Domoriks",
+        "description": "Entrez les paramètres de connexion et choisissez comment configurer les modules.",
+        "data": {
+          "port": "Port série",
+          "baudrate": "Baudrate",
+          "poll_interval": "Intervalle de sondage (secondes)",
+          "reconnect_interval": "Intervalle de reconnexion (secondes)",
+          "setup_mode": "Configuration des modules"
+        }
+      },
+      "manual": {
+        "title": "Configurer les modules manuellement",
+        "description": "Entrez les identifiants et nombres de sorties au format `id:outputs`, séparés par des virgules.",
+        "data": {
+          "modules": "Modules (id:outputs)"
+        }
+      },
+      "upload": {
+        "title": "Importer le JSON du projet",
+        "description": "Sélectionnez votre fichier JSON de projet Domoriks.",
+        "data": {
+          "config_file": "Fichier JSON du projet"
+        }
+      }
+    },
+    "error": {
+      "invalid_modules": "Les modules doivent être au format id:outputs.",
+      "invalid_json": "Impossible d'analyser le JSON — assurez-vous qu'il s'agit d'un JSON de projet valide.",
+      "no_modules_found": "Aucun module de sortie trouvé dans le JSON.",
+      "file_selector_not_supported": "Le téléversement de fichiers n'est pas pris en charge dans ce frontend."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options Domoriks",
+        "description": "Ajuster les paramètres de sondage et choisir comment mettre à jour les modules.",
+        "data": {
+          "poll_interval": "Intervalle de sondage (secondes)",
+          "reconnect_interval": "Intervalle de reconnexion (secondes)",
+          "setup_mode": "Configuration des modules"
+        }
+      },
+      "manual": {
+        "title": "Configurer les modules manuellement",
+        "description": "Entrez les identifiants et nombres de sorties au format `id:outputs`, séparés par des virgules.",
+        "data": {
+          "modules": "Modules (id:outputs)"
+        }
+      },
+      "upload": {
+        "title": "Importer le JSON du projet",
+        "description": "Sélectionnez votre fichier JSON de projet Domoriks.",
+        "data": {
+          "import_file": "Fichier JSON du projet"
+        }
+      }
+    },
+    "error": {
+      "invalid_modules": "Les modules doivent être au format id:outputs.",
+      "invalid_json": "Impossible d'analyser le JSON — assurez-vous qu'il s'agit d'un JSON de projet valide.",
+      "no_modules_found": "Aucun module de sortie trouvé dans le JSON.",
+      "file_selector_not_supported": "Le téléversement de fichiers n'est pas pris en charge dans ce frontend."
+    }
+  },
+  "services": {
+    "command": {
+      "name": "Envoyer une commande",
+      "description": "Envoyer une commande Domoriks brute (ex. rc 64 0 16).",
+      "fields": {
+        "command": {
+          "name": "Commande",
+          "description": "Commande au format 'cmd slave address data'."
+        }
+      }
+    }
+  }
+}

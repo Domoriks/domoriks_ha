@@ -11,12 +11,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BAUDRATE,
     CONF_MODULE_ID,
-    CONF_MODULE_IDS,
     CONF_MODULES,
     CONF_PORT,
     DOMAIN,
@@ -25,6 +23,8 @@ from .const import (
 )
 from .coordinator import DomoriksCoordinator
 from .hub import DomoriksHub
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type DomoriksConfigEntry = ConfigEntry["DomoriksRuntimeData"]
 
@@ -36,23 +36,6 @@ class DomoriksRuntimeData:
     hub: DomoriksHub
     coordinator: DomoriksCoordinator
     manual_command: str = "rc 64 0 6"
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Import YAML and defer to config entries."""
-    if DOMAIN not in config:
-        return True
-
-    hass.data.setdefault(DOMAIN, {})
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "import"},
-            data=config[DOMAIN],
-        )
-    )
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DomoriksConfigEntry) -> bool:

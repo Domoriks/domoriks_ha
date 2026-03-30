@@ -53,7 +53,7 @@ class DomoriksSendCommandButton(ButtonEntity):
             raise HomeAssistantError(f"Failed to send command: {exc}") from exc
 
 
-def async_setup_entry(
+async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,

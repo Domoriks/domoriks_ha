@@ -86,10 +86,13 @@ class DomoriksCoordinator(DataUpdateCoordinator[Dict[int, List[bool]]]):
         if not self.hub.is_connected:
             if self.data:
                 return self.data
-            return {m.module_id: [False] * m.outputs for m in self.modules}
+            return {m.module_id: [False] * m.outputs for m in self.modules if m.enabled}
 
         data: Dict[int, List[bool]] = {}
         for module in self.modules:
+            if not module.enabled:
+                # Skip disabled modules when polling
+                continue
             coil_count = max(module.coil_count, 1)
             try:
                 states = await self.hub.async_read_coils(module.module_id, 0, coil_count)

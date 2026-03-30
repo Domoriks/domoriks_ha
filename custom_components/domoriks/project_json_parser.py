@@ -1,7 +1,5 @@
 """Parsing helpers for Domoriks project JSON files.
 
-Public API
-----------
 parse_json_upload(value)       – decode a raw form value (str / bytes / HA
                                   FileSelector dict) into a parsed JSON object.
 modules_from_project_json(obj) – convert a project JSON dict into the list of
@@ -104,7 +102,7 @@ def modules_from_project_json(obj: Any) -> list[dict[str, Any]]:
     - ``node`` (int) – Modbus slave address / module ID.
     - ``num_outputs`` (int, optional) – number of outputs; inferred from
       ``outputs`` dict length when absent.
-    - ``outputs`` (dict, optional) – ``{name: 1-based-position}`` mapping.
+    - ``outputs`` (dict, optional) – ``{name: 0-based-position}`` mapping.
 
     Modules with zero outputs are skipped.
 
@@ -142,12 +140,12 @@ def modules_from_project_json(obj: Any) -> list[dict[str, Any]]:
         if num_outputs <= 0:
             continue
 
-        # Convert {name: 1-based-position} → {str(0-based-index): name}
+        # Convert {name: 0-based-position} → {str(index): name}
         output_names: dict[str, str] = {}
         if isinstance(outputs_map, dict):
             for name, pos in outputs_map.items():
                 try:
-                    idx = int(pos) - 1
+                    idx = int(pos)
                 except (TypeError, ValueError):
                     continue
                 if 0 <= idx < num_outputs:

@@ -1,0 +1,692 @@
+{
+  "name": "Example Domoriks Home",
+  "modules": [
+    {
+      "node": 1,
+      "name": "Living Switch",
+      "num_inputs": 4,
+      "num_extra_actions": 20,
+      "num_outputs": 0,
+      "input_actions": {
+        "input1_singlePress": {
+          "action": "toggle",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input1_doublePress": {
+          "action": "on",
+          "delay_action": "off",
+          "delay": 5000,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input1_longPress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input2_singlePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input2_doublePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input2_longPress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input3_singlePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input3_doublePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input3_longPress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input4_singlePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input4_doublePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input4_longPress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        }
+      },
+      "extra_actions": {
+        "extraAction1": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction2": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction3": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction4": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction5": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction6": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction7": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction8": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction9": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction10": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction11": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction12": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction13": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction14": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction15": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction16": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction17": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction18": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction19": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction20": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        }
+      },
+      "outputs": {}
+    },
+    {
+      "node": 64,
+      "name": "Module 1",
+      "num_inputs": 0,
+      "num_extra_actions": 0,
+      "num_outputs": 16,
+      "input_actions": {},
+      "extra_actions": {},
+      "outputs": {
+        "Inkom": 0,
+        "Keuken": 1,
+        "Living": 2,
+        "Badkamer": 3,
+        "Slaapkamer": 4,
+        "Kantoor": 5,
+        "Output 7": 6,
+        "Output 8": 7,
+        "Output 9": 8,
+        "Output 10": 9,
+        "Output 11": 10,
+        "Output 12": 11,
+        "Output 13": 12,
+        "Output 14": 13,
+        "Output 15": 14,
+        "Output 16": 15
+      }
+    },
+    {
+      "node": 65,
+      "name": "Module 2",
+      "num_inputs": 0,
+      "num_extra_actions": 0,
+      "num_outputs": 6,
+      "input_actions": {},
+      "extra_actions": {},
+      "outputs": {
+        "Inkom": 0,
+        "Keuken": 1,
+        "Living": 2,
+        "Badkamer": 3,
+        "Slaapkamer": 4,
+        "Kantoor": 5
+      }
+    },
+    {
+      "node": 66,
+      "name": "Module 3",
+      "num_inputs": 4,
+      "num_extra_actions": 24,
+      "num_outputs": 6,
+      "input_actions": {
+        "input1_singlePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input1_doublePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input1_longPress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input2_singlePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input2_doublePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input2_longPress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input3_singlePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input3_doublePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input3_longPress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input4_singlePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input4_doublePress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "input4_longPress": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        }
+      },
+      "extra_actions": {
+        "extraAction1": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction2": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction3": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction4": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction5": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction6": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction7": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction8": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction9": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction10": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction11": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction12": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction13": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction14": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction15": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction16": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction17": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction18": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction19": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction20": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction21": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction22": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction23": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        },
+        "extraAction24": {
+          "action": "nop",
+          "delay_action": "nop",
+          "delay": 0,
+          "brightness": 100,
+          "node": 0,
+          "output": 0,
+          "extra_action_index": 0
+        }
+      },
+      "outputs": {
+        "Output 1": 0,
+        "Output 2": 1,
+        "Output 3": 2,
+        "Output 4": 3,
+        "Output 5": 4,
+        "Output 6": 5
+      }
+    }
+  ]
+}

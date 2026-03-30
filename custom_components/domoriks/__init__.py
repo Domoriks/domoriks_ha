@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DomoriksConfigEntry) -> 
     # Seed coordinator with safe default data so the entry loads immediately.
     # Real state is fetched in the background; entities update via RX events.
     coordinator.async_set_updated_data(
-        {m.module_id: [False] * m.outputs for m in hub.modules}
+        {m.module_id: [False] * m.outputs for m in hub.modules if m.enabled}
     )
 
     async def _initial_refresh_and_notify() -> None:

@@ -102,7 +102,7 @@ class DomoriksCoordinator(DataUpdateCoordinator[Dict[int, List[bool]]]):
         return data
 
     async def _async_read_all_after_activity(self) -> None:
-        """After non-read bus activity, read all modules with inter-module delay.
+        """After non-read bus activity, read all enabled modules with inter-module delay.
 
         Mirrors the original domoriks_ha automation:
           delay 150 ms → rc module_1 → delay 50 ms → rc module_2 → …
@@ -110,6 +110,8 @@ class DomoriksCoordinator(DataUpdateCoordinator[Dict[int, List[bool]]]):
         """
         await asyncio.sleep(0.150)
         for module in self.modules:
+            if not module.enabled:
+                continue
             if not self.hub.is_connected:
                 break
             try:

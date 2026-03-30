@@ -74,7 +74,8 @@ async def async_setup_entry(
     """Set up Domoriks switches from config entry."""
 
     coordinator: DomoriksCoordinator = entry.runtime_data.coordinator
-    active_module_ids = {module.module_id for module in coordinator.modules}
+    modules = entry.runtime_data.hub.modules
+    active_module_ids = {module.module_id for module in modules}
 
     # Remove entities and devices for modules that are no longer in the config.
     registry = er.async_get(hass)
@@ -104,7 +105,7 @@ async def async_setup_entry(
                 break
 
     entities: list[DomoriksSwitch] = []
-    for module in coordinator.modules:
+    for module in modules:
         for index in range(module.outputs):
             entities.append(DomoriksSwitch(coordinator, module, index))
 

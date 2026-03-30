@@ -312,7 +312,10 @@ class DomoriksHub:
             "port": self._port,
             "baudrate": self._baudrate,
             "modules": [
-                {"id": module.module_id, "outputs": module.outputs}
+                {
+                    "id": module.module_id,
+                    "outputs": module.outputs,
+                }
                 for module in self.modules
             ],
             "last_rx": self._frame_to_dict(self.last_rx),

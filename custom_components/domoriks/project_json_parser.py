@@ -1,9 +1,9 @@
 """Parsing helpers for Domoriks project JSON files.
 
 parse_json_upload(value)       – decode a raw form value (str / bytes / HA
-                                  FileSelector dict) into a parsed JSON object.
+                                FileSelector dict) into a parsed JSON object.
 modules_from_project_json(obj) – convert a project JSON dict into the list of
-                                  module dicts used internally by the integration.
+                                module dicts used internally by the integration.
 """
 
 from __future__ import annotations

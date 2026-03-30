@@ -5,6 +5,8 @@ import logging
 from typing import Dict, List
 
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -30,13 +32,41 @@ def _parse_read_coils_payload(payload_hex: str, count: int) -> List[bool]:
         return [False] * count
 
 
+def _module_is_disabled_in_ha(
+    hass: HomeAssistant,
+    entry_id: str,
+    module_id: int,
+) -> bool:
+    """Return True when HA registry marks a module device/entities as disabled."""
+    entity_registry = er.async_get(hass)
+    unique_id_prefix = f"{module_id}_output_"
+    module_entities = [
+        entity_entry
+        for entity_entry in er.async_entries_for_config_entry(entity_registry, entry_id)
+        if (entity_entry.unique_id or "").startswith(unique_id_prefix)
+    ]
+    if module_entities:
+        return all(entity_entry.disabled_by is not None for entity_entry in module_entities)
+
+    device_registry = dr.async_get(hass)
+    for device_entry in dr.async_entries_for_config_entry(device_registry, entry_id):
+        if any(domain == DOMAIN and identifier == str(module_id) for domain, identifier in device_entry.identifiers):
+            return getattr(device_entry, "disabled_by", None) is not None
+
+    return False
+
+
 class DomoriksCoordinator(DataUpdateCoordinator[Dict[int, List[bool]]]):
     """Event-driven coordinator: state updated from RX bus events, not a timer."""
 
     def __init__(self, hass: HomeAssistant, hub: DomoriksHub, entry) -> None:
         self.hub = hub
-        self.modules: List[ModuleConfig] = hub.modules
-        self._module_map: Dict[int, ModuleConfig] = {m.module_id: m for m in hub.modules}
+        self.modules: List[ModuleConfig] = [
+            module
+            for module in hub.modules
+            if not _module_is_disabled_in_ha(hass, entry.entry_id, module.module_id)
+        ]
+        self._module_map: Dict[int, ModuleConfig] = {m.module_id: m for m in self.modules}
         self._unreachable_modules: set[int] = set()
         self._read_after_activity_task: asyncio.Task | None = None
 
@@ -86,13 +116,10 @@ class DomoriksCoordinator(DataUpdateCoordinator[Dict[int, List[bool]]]):
         if not self.hub.is_connected:
             if self.data:
                 return self.data
-            return {m.module_id: [False] * m.outputs for m in self.modules if m.enabled}
+            return {m.module_id: [False] * m.outputs for m in self.modules}
 
         data: Dict[int, List[bool]] = {}
         for module in self.modules:
-            if not module.enabled:
-                # Skip disabled modules when polling
-                continue
             coil_count = max(module.coil_count, 1)
             try:
                 states = await self.hub.async_read_coils(module.module_id, 0, coil_count)
@@ -105,7 +132,7 @@ class DomoriksCoordinator(DataUpdateCoordinator[Dict[int, List[bool]]]):
         return data
 
     async def _async_read_all_after_activity(self) -> None:
-        """After non-read bus activity, read all enabled modules with inter-module delay.
+        """After non-read bus activity, read all active modules with inter-module delay.
 
         Mirrors the original domoriks_ha automation:
           delay 150 ms → rc module_1 → delay 50 ms → rc module_2 → …
@@ -113,8 +140,6 @@ class DomoriksCoordinator(DataUpdateCoordinator[Dict[int, List[bool]]]):
         """
         await asyncio.sleep(0.150)
         for module in self.modules:
-            if not module.enabled:
-                continue
             if not self.hub.is_connected:
                 break
             try:

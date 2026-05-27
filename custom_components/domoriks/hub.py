@@ -197,16 +197,70 @@ class DomoriksHub:
     async def _wait_for_response(
         self, slave: int, function: int, timeout: float = 2.0
     ) -> Frame:
+        return await self._wait_for_matching_response(
+            slave=slave,
+            functions={function},
+            timeout=timeout,
+        )
+
+    async def _wait_for_matching_response(
+        self,
+        slave: int,
+        functions: set[int],
+        timeout: float = 2.0,
+    ) -> Frame:
         try:
             while True:
                 frame = await asyncio.wait_for(
                     self._frame_queue.get(),
                     timeout=timeout,
                 )
-                if frame.slave == slave and frame.function == function:
+                if frame.slave == slave and frame.function in functions:
                     return frame
         except asyncio.TimeoutError as exc:
             raise DomoriksError("Timed out waiting for response") from exc
+
+    async def async_send_raw_frame(
+        self,
+        frame: bytes,
+        timeout: float = 2.0,
+    ) -> Optional[Frame]:
+        slave, function, payload = ModbusCodec.decode(frame)
+        async with self._lock:
+            await self._send_raw(frame)
+            self.last_tx = Frame(slave, function, payload)
+            if slave == 0:
+                return None
+            return await self._wait_for_matching_response(
+                slave=slave,
+                functions={function, function | 0x80},
+                timeout=timeout,
+            )
+
+    async def async_detect_slave(self, slave: int, timeout: float = 2.0) -> bool:
+        try:
+            await self.async_read_coils(slave, 0, 1)
+        except DomoriksError:
+            return False
+        return True
+
+    async def async_detect_range(
+        self,
+        start_slave: int,
+        end_slave: int,
+        timeout: float = 2.0,
+    ) -> dict[str, list[int]]:
+        reachable: list[int] = []
+        unreachable: list[int] = []
+        for slave in range(start_slave, end_slave + 1):
+            if await self.async_detect_slave(slave, timeout=timeout):
+                reachable.append(slave)
+            else:
+                unreachable.append(slave)
+        return {
+            "reachable": reachable,
+            "unreachable": unreachable,
+        }
 
     async def async_read_coils(self, slave: int, start: int, count: int) -> List[bool]:
         payload = struct.pack(">HH", start, count)

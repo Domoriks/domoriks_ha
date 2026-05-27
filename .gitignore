@@ -26,6 +26,6 @@ htmlcov/
 .idea/
 .DS_Store
 Thumbs.db
-
+.grill/*
 
 custom_components/domoriks/brand/logo_border.png

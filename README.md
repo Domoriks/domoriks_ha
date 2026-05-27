@@ -135,6 +135,113 @@ Common commands:
 | `wr` | `0x06` | Write single register. |
 | `wmr` | `0x10` | Write multiple registers. |
 
+### HTTP API
+
+The integration also exposes authenticated Home Assistant HTTP endpoints for raw Modbus RTU access.
+
+- `POST /api/domoriks/raw`
+- `POST /api/domoriks/detect`
+
+Notes:
+
+- Home Assistant authentication applies. Send a valid HA long-lived access token.
+- RTU only. Modbus ASCII and Modbus TCP are not supported.
+- Raw RTU frames are limited to `128` bytes to match device-side buffer constraints.
+- If more than one Domoriks config entry is loaded, include `entry_id` in the JSON body.
+
+#### `POST /api/domoriks/raw`
+
+Send an exact Modbus RTU frame as hex, including CRC. The integration validates CRC before anything is written to the serial bus.
+
+Request body:
+
+```json
+{
+  "frame": "40050000ff008ec6",
+  "timeout": 2.0,
+  "entry_id": "optional-config-entry-id"
+}
+```
+
+Fields:
+
+| Field | Required | Description |
+|---|---|---|
+| `frame` | Yes | Full Modbus RTU frame as hex, including CRC. Spaces are allowed. |
+| `timeout` | No | Response wait timeout in seconds. Default `2.0`. |
+| `entry_id` | No | Required only when multiple Domoriks entries are configured. |
+
+Behavior:
+
+- Slave `0` is treated as broadcast, so the frame is sent and no response is awaited.
+- Non-broadcast frames wait for one matching response.
+- Valid Modbus exception responses are returned as normal HTTP responses with `exception` metadata.
+
+Example response:
+
+```json
+{
+  "tx": {
+    "frame": "400100000001bc00",
+    "slave": 64,
+    "function": 1,
+    "payload": "00000001",
+    "broadcast": false
+  },
+  "response": {
+    "frame": "400101019048",
+    "slave": 64,
+    "function": 1,
+    "payload": "0101",
+    "exception": false,
+    "exception_code": null
+  }
+}
+```
+
+#### `POST /api/domoriks/detect`
+
+Ping one slave or scan an inclusive slave range sequentially over the RS-485 bus.
+
+Single-slave request:
+
+```json
+{
+  "slave": 64,
+  "timeout": 2.0
+}
+```
+
+Range-scan request:
+
+```json
+{
+  "start_slave": 64,
+  "end_slave": 68,
+  "timeout": 1.0
+}
+```
+
+Single-slave response:
+
+```json
+{
+  "slave": 64,
+  "reachable": true
+}
+```
+
+Range-scan response:
+
+```json
+{
+  "reachable": [64, 65, 66],
+  "unreachable": [67, 68],
+  "start_slave": 64,
+  "end_slave": 68
+}
+```
+
 ---
 
 ## Diagnostics

@@ -23,6 +23,7 @@ from .const import (
 )
 from .coordinator import DomoriksCoordinator
 from .hub import DomoriksHub
+from .http_api import async_register_http_views
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -83,6 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DomoriksConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     _register_services(hass, hub)
+    async_register_http_views(hass)
 
     # Reload the entry whenever the user saves new options.
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))

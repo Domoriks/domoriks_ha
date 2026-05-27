@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Domoriks setup",
-        "description": "Enter connection settings and choose how to configure modules.",
+        "description": "Enter connection settings and choose how to configure modules. For HTTP API token setup steps, see [HTTP API token setup]({http_api_token_docs}).",
         "data": {
           "port": "Serial port",
           "baudrate": "Baudrate",
@@ -39,7 +39,7 @@
     "step": {
       "init": {
         "title": "Domoriks options",
-        "description": "Adjust polling settings and choose how to update modules.",
+        "description": "Adjust polling settings and choose how to update modules. For HTTP API token setup steps, see [HTTP API token setup]({http_api_token_docs}).",
         "data": {
           "poll_interval": "Poll interval (seconds)",
           "reconnect_interval": "Reconnect interval (seconds)",

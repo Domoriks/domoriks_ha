@@ -33,6 +33,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+_HTTP_API_TOKEN_DOCS_URL = (
+    "https://github.com/domoriks/domoriks_ha#http-api-token-setup"
+)
+
 # Setup-mode selector used in the first step of both flows.
 _SETUP_MODE_SELECTOR = selector.SelectSelector(
     selector.SelectSelectorConfig(options=["manual", "upload"])
@@ -115,6 +119,9 @@ class DomoriksConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            description_placeholders={
+                "http_api_token_docs": _HTTP_API_TOKEN_DOCS_URL,
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_PORT, default=DEFAULT_PORT): str,
@@ -295,6 +302,9 @@ class DomoriksOptionsFlow(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
+            description_placeholders={
+                "http_api_token_docs": _HTTP_API_TOKEN_DOCS_URL,
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_POLL_INTERVAL, default=defaults_poll): vol.Coerce(int),

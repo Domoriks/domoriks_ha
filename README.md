@@ -149,6 +149,49 @@ Notes:
 - Raw RTU frames are limited to `128` bytes to match device-side buffer constraints.
 - If more than one Domoriks config entry is loaded, include `entry_id` in the JSON body.
 
+#### HTTP API token setup
+
+You must create a Home Assistant long-lived access token once, then include it in the `Authorization` header for all API requests.
+
+1. Open Home Assistant.
+2. Go to your profile page:
+   - Click your user avatar/name in the lower-left sidebar.
+3. Scroll to **Long-lived access tokens**.
+4. Click **Create Token**.
+5. Enter a name, for example `domoriks-http-api`.
+6. Copy the token immediately and store it securely.
+
+Important:
+
+- Home Assistant shows the token only once.
+- If you lose it, create a new token and revoke the old one.
+- Do not commit tokens into git repositories.
+
+Set token in shell before calling API.
+
+Bash:
+
+```bash
+export HA_URL="http://homeassistant.local:8123"
+export HA_TOKEN="YOUR_LONG_LIVED_TOKEN"
+```
+
+PowerShell:
+
+```powershell
+$env:HA_URL = "http://homeassistant.local:8123"
+$env:HA_TOKEN = "YOUR_LONG_LIVED_TOKEN"
+```
+
+Quick auth check:
+
+```bash
+curl -sS "$HA_URL/api/" \
+  -H "Authorization: Bearer $HA_TOKEN"
+```
+
+Expected response is JSON describing API endpoints. If you get `401 Unauthorized`, verify token and user permissions.
+
 #### `POST /api/domoriks/raw`
 
 Send an exact Modbus RTU frame as hex, including CRC. The integration validates CRC before anything is written to the serial bus.

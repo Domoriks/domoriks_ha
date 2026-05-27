@@ -29,3 +29,4 @@ Thumbs.db
 .grill/*
 
 custom_components/domoriks/brand/logo_border.png
+.env

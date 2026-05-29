@@ -197,10 +197,10 @@ Invoke-ApiPost `
     -ExpectedStatuses @(200)
 
 # Detect slave range
-$rangeEnd = $MODULE_ID + 2
-$detectRange = "{`"start_slave`":$MODULE_ID,`"end_slave`":$rangeEnd$entryFragment}"
+$rangeEnd = 1 + 9
+$detectRange = "{`"start_slave`":1,`"end_slave`":$rangeEnd$entryFragment}"
 Invoke-ApiPost `
-    -Name "detect slave range ($MODULE_ID..$rangeEnd)" `
+    -Name "detect slave range ($1..$rangeEnd)" `
     -Endpoint "/api/domoriks/detect" `
     -Payload $detectRange `
     -ExpectedStatuses @(200)

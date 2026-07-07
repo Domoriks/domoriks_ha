@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from typing import Any
+
+from homeassistant.util import dt as dt_util
 
 
 def _format_timestamp() -> str:
-    """Format current UTC time as YYYY-MM-DD HHh MMm SS.mmmms"""
-    now = datetime.utcnow()
+    """Format current local time as YYYY-MM-DD, HH:MM:SS.mmmms"""
+    now = dt_util.now()
     ms = now.microsecond // 1000
     return now.strftime('%Y-%m-%d, %H:%M:%S') + f".{ms:03d}s"
 

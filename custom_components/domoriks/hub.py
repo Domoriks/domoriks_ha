@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import os
 import struct
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -30,6 +31,7 @@ from .const import (
     EVENT_RX,
     EVENT_STARTED,
     EVENT_TX,
+    ERROR_SCAN_INTERVAL,
     READ_COILS,
     READ_HOLD_REGS,
     WRITE_SINGLE_COIL,
@@ -134,6 +136,11 @@ class DomoriksHub:
     async def _connect_loop(self) -> None:
         while True:
             try:
+                # While the bus is in error (device missing) scan every
+                # ERROR_SCAN_INTERVAL seconds for the RS485 device to reappear
+                # before attempting to open it.
+                await self._wait_for_port()
+
                 _LOGGER.info(
                     "domoriks: opening serial port %s @ %s",
                     self._port,
@@ -169,7 +176,38 @@ class DomoriksHub:
                 self.hass.bus.async_fire(EVENT_ERROR, {"error": str(exc)})
                 _LOGGER.exception("domoriks: connection error")
 
+            # Release the serial port before retrying so a reconnected RS485
+            # adapter can be reopened cleanly on the next iteration.
+            self._connected.clear()
+            if self._daemon:
+                with contextlib.suppress(Exception):
+                    await self._daemon.stop()
+                self._daemon = None
+
             await asyncio.sleep(self.reconnect_interval)
+
+    async def _wait_for_port(self) -> None:
+        """Block until the serial device is present.
+
+        For device paths (e.g. /dev/serial/by-id/...) the presence is probed
+        every ``ERROR_SCAN_INTERVAL`` seconds so a disconnected RS485 adapter is
+        detected as soon as it reappears. URL-style ports (socket://, rfc2217://)
+        cannot be probed, so they fall through and are retried by the open call.
+        """
+        port = self._port or ""
+        if "://" in port or not port.startswith("/"):
+            return
+        if os.path.exists(port):
+            return
+
+        _LOGGER.warning(
+            "domoriks: serial device %s missing, scanning every %ss",
+            port,
+            ERROR_SCAN_INTERVAL,
+        )
+        while not os.path.exists(port):
+            await asyncio.sleep(ERROR_SCAN_INTERVAL)
+        _LOGGER.info("domoriks: serial device %s reappeared", port)
 
     async def _handle_frame(self, slave: int, function: int, payload: bytes) -> None:
         frame = Frame(slave, function, payload)

@@ -21,6 +21,8 @@ DEFAULT_BAUDRATE: Final = 115200
 DEFAULT_OUTPUTS_PER_MODULE: Final = 6
 DEFAULT_POLL_INTERVAL: Final = timedelta(seconds=15)
 DEFAULT_RECONNECT_INTERVAL: Final = 3
+# While the bus is in error (device missing) scan for its return this often.
+ERROR_SCAN_INTERVAL: Final = 10
 
 READ_COILS: Final = 0x01
 READ_DISC_INPUTS: Final = 0x02

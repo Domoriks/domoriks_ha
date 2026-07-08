@@ -40,6 +40,12 @@ class SerialDaemon:
             await self.writer.wait_closed()
         _LOGGER.warning("domoriks: SerialDaemon stopped")
 
+    def _notify_error(self, exc: Exception) -> None:
+        """Invoke the error callback, scheduling it if it is a coroutine."""
+        result = self._on_error(exc)
+        if asyncio.iscoroutine(result):
+            asyncio.create_task(result)
+
     def _try_extract_frame(self) -> bool:
         """
         Try to extract a complete Modbus frame from the buffer.
@@ -92,6 +98,16 @@ class SerialDaemon:
 
                     while self._try_extract_frame():
                         pass
+                elif self.reader.at_eof():
+                    # An empty read at EOF means the serial device vanished
+                    # (e.g. the USB-RS485 adapter was unplugged). Terminate the
+                    # loop so the hub's connect loop can restore the bus and
+                    # detect the device when it reconnects.
+                    _LOGGER.warning(
+                        "domoriks: serial EOF - RS485 device disconnected"
+                    )
+                    self._notify_error(ConnectionError("Serial device disconnected"))
+                    break
 
             except asyncio.TimeoutError:
                 if self.buffer:
@@ -106,11 +122,15 @@ class SerialDaemon:
                                 self.buffer.clear()
 
             except Exception as exc:  # noqa: BLE001 - keep broad to surface serial faults
+                # A serial fault (e.g. the RS485 adapter was unplugged) is not
+                # recoverable in place. Stop the loop so the hub can reopen the
+                # port and detect the device once it reconnects.
                 self.buffer.clear()
-                await asyncio.sleep(1)
-                result = self._on_error(exc)
-                if asyncio.iscoroutine(result):
-                    asyncio.create_task(result)
+                _LOGGER.warning("domoriks: serial read error, terminating: %s", exc)
+                self._notify_error(exc)
+                break
+
+        self._running = False
 
     def send_frame(self, frame: bytes) -> None:
         if not self.writer:

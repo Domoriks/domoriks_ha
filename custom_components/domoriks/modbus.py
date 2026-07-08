@@ -30,3 +30,11 @@ class ModbusCodec:
             raise ValueError("CRC mismatch")
 
         return body[0], body[1], body[2:]
+
+    @staticmethod
+    def crc_ok(frame: bytes) -> bool:
+        """Return True if *frame* (data + trailing 2-byte CRC) has a valid CRC."""
+        if len(frame) < 4:
+            return False
+        crc_rx = struct.unpack(">H", frame[-2:])[0]
+        return crc16(frame[:-2]) == crc_rx

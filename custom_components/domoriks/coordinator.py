@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Dict, List
+from time import monotonic
+from typing import Dict, List, Optional
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -12,7 +13,15 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, EVENT_RX, READ_COILS, WRITE_FUNCTIONS
+from .const import (
+    DOMAIN,
+    EVENT_RX,
+    READ_COILS,
+    WRITE_FUNCTIONS,
+    WRITE_MULTI_COILS,
+    WRITE_MULTI_REGS,
+    WRITE_SINGLE_COIL,
+)
 from .hub import DomoriksHub, ModuleConfig
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +66,21 @@ def _module_is_disabled_in_ha(
 
 
 class DomoriksCoordinator(DataUpdateCoordinator[Dict[int, List[bool]]]):
-    """Event-driven coordinator: state updated from RX bus events, not a timer."""
+    """Event-driven coordinator: state updated from RX bus events, not a timer.
+
+    Observed write frames are decoded and applied optimistically, then verified with a
+    targeted poll of the addressed module (the source of truth). Polls also happen at
+    startup and after a delayed action's delay elapses.
+    """
+
+    # A write request and the module's byte-identical echo both appear on the shared
+    # bus; collapse that pair into a single optimistic update within this window (s).
+    DEDUPE_WINDOW = 0.1
+    # Per-module debounce before the verify-poll fires, so a burst of writes to one
+    # module collapses into a single read (s).
+    VERIFY_POLL_DEBOUNCE = 0.15
+    # Extra margin added after a delayed action's delay before the reconciling poll (s).
+    DELAY_POLL_MARGIN = 0.5
 
     def __init__(self, hass: HomeAssistant, hub: DomoriksHub, entry) -> None:
         self.hub = hub
@@ -68,7 +91,8 @@ class DomoriksCoordinator(DataUpdateCoordinator[Dict[int, List[bool]]]):
         ]
         self._module_map: Dict[int, ModuleConfig] = {m.module_id: m for m in self.modules}
         self._unreachable_modules: set[int] = set()
-        self._read_after_activity_task: asyncio.Task | None = None
+        self._pending_verify_polls: Dict[int, asyncio.Task] = {}
+        self._recent_write_frames: Dict[tuple[int, int, str], float] = {}
 
         # update_interval=None disables the built-in scheduler entirely.
         super().__init__(
@@ -101,15 +125,136 @@ class DomoriksCoordinator(DataUpdateCoordinator[Dict[int, List[bool]]]):
             new_data = {**(self.data or {}), module.module_id: states}
             self.async_set_updated_data(new_data)
         elif function in WRITE_FUNCTIONS:
-            # Write response — trigger a debounced coil re-read so the new state is
-            # reflected in HA. Cancel any already-pending read so that a burst of writes
-            # (rapid button presses) only results in ONE follow-up read.
-            if self._read_after_activity_task and not self._read_after_activity_task.done():
-                self._read_after_activity_task.cancel()
-            self._read_after_activity_task = self.hass.async_create_task(
-                self._async_read_all_after_activity()
-            )
+            # A write was observed on the bus. Decode it, update the affected module's
+            # state optimistically, and verify against the module with a targeted poll.
+            self._handle_write_frame(slave, function, payload_hex)
         # else: read-only responses (0x02, 0x03, 0x04) — ignore, state hasn't changed.
+
+    @callback
+    def _handle_write_frame(self, slave: int, function: int, payload_hex: str) -> None:
+        """Decode an observed write frame, apply it optimistically, and schedule a
+        targeted verify-poll of the addressed module (the source of truth)."""
+        module = self._module_map.get(slave)
+        if module is None:
+            return
+
+        # The module is transmitting/echoing, so it is reachable.
+        self._unreachable_modules.discard(slave)
+
+        delayed = False
+        delay_s = 0
+        if not self._is_duplicate_write(slave, function, payload_hex):
+            module_known = bool(self.data) and module.module_id in self.data
+            current = (
+                list(self.data[module.module_id])
+                if module_known
+                else [False] * module.outputs
+            )
+            effects, delayed, delay_s = self._decode_coil_effects(
+                function, payload_hex, current, module_known
+            )
+            if effects:
+                new_states = current[:]
+                changed = False
+                for index, value in effects.items():
+                    if 0 <= index < len(new_states) and new_states[index] != value:
+                        new_states[index] = value
+                        changed = True
+                if changed:
+                    self.async_set_updated_data(
+                        {**(self.data or {}), module.module_id: new_states}
+                    )
+            # Toggle-with-unknown-state and delayed actions apply no optimistic change;
+            # the verify-poll below establishes the truth.
+
+        # Verify against the module regardless (debounced per module).
+        self._schedule_verify_poll(module.module_id)
+        if delayed and delay_s > 0:
+            # The output changes only after the delay elapses; poll again then.
+            self.hass.async_create_task(
+                self._async_delayed_verify_poll(module.module_id, delay_s)
+            )
+
+    def _is_duplicate_write(self, slave: int, function: int, payload_hex: str) -> bool:
+        """Return True if this exact write frame was seen within DEDUPE_WINDOW.
+
+        On the shared RS485 bus a write request and the module's identical echo both
+        arrive; deduping prevents an optimistic toggle from flipping twice.
+        """
+        now = monotonic()
+        key = (slave, function, payload_hex)
+        for stale_key in [
+            k for k, ts in self._recent_write_frames.items() if now - ts > self.DEDUPE_WINDOW
+        ]:
+            del self._recent_write_frames[stale_key]
+        duplicate = key in self._recent_write_frames
+        self._recent_write_frames[key] = now
+        return duplicate
+
+    @staticmethod
+    def _coil_value_to_state(value: int, address: int, current: List[bool], known: bool) -> Optional[bool]:
+        """Map a single-coil write value to a resulting state, or None if unknown."""
+        if value == 0xFF00:
+            return True
+        if value == 0x0000:
+            return False
+        if value == 0x5555:  # toggle — flip the known bit, or poll if unknown
+            if known and 0 <= address < len(current):
+                return not current[address]
+            return None
+        return None
+
+    def _decode_coil_effects(
+        self,
+        function: int,
+        payload_hex: str,
+        current: List[bool],
+        known: bool,
+    ) -> tuple[Dict[int, bool], bool, int]:
+        """Decode a write frame into coil effects.
+
+        Returns (effects, delayed, delay_s) where *effects* maps output index to its
+        resulting state for immediate changes, *delayed* marks a delayed action whose
+        output changes after *delay_s* seconds.
+        """
+        effects: Dict[int, bool] = {}
+        try:
+            raw = bytes.fromhex(payload_hex)
+        except ValueError:
+            return effects, False, 0
+
+        if function == WRITE_SINGLE_COIL and len(raw) >= 4:
+            address = int.from_bytes(raw[0:2], "big")
+            value = int.from_bytes(raw[2:4], "big")
+            result = self._coil_value_to_state(value, address, current, known)
+            if result is not None:
+                effects[address] = result
+            return effects, False, 0
+
+        if function == WRITE_MULTI_COILS and len(raw) >= 5:
+            start = int.from_bytes(raw[0:2], "big")
+            count = int.from_bytes(raw[2:4], "big")
+            byte_count = raw[4]
+            data = raw[5 : 5 + byte_count]
+            bits = int.from_bytes(data, "little")
+            for i in range(count):
+                effects[start + i] = (bits >> i) & 0x01 == 1
+            return effects, False, 0
+
+        if function == WRITE_MULTI_REGS and len(raw) >= 5:
+            start = int.from_bytes(raw[0:2], "big")
+            byte_count = raw[4]
+            reg_data = raw[5 : 5 + byte_count]
+            regs = [
+                int.from_bytes(reg_data[i : i + 2], "big")
+                for i in range(0, len(reg_data) - 1, 2)
+            ]
+            # Delayed action: [output index, coil_data, delay (seconds), pwm].
+            if start == 0 and len(regs) >= 3:
+                return effects, True, regs[2]
+            return effects, False, 0
+
+        return effects, False, 0
 
     async def _async_update_data(self) -> Dict[int, List[bool]]:
         """Called once on startup to fetch initial coil state for all modules."""
@@ -131,25 +276,45 @@ class DomoriksCoordinator(DataUpdateCoordinator[Dict[int, List[bool]]]):
                 data[module.module_id] = [False] * module.outputs
         return data
 
-    async def _async_read_all_after_activity(self) -> None:
-        """After non-read bus activity, read all active modules with inter-module delay.
+    def _schedule_verify_poll(self, module_id: int) -> None:
+        """Schedule (or reschedule) a debounced verify-poll of a single module."""
+        task = self._pending_verify_polls.get(module_id)
+        if task and not task.done():
+            task.cancel()
+        self._pending_verify_polls[module_id] = self.hass.async_create_task(
+            self._async_verify_poll(module_id)
+        )
 
-        Mirrors the original domoriks_ha automation:
-          delay 150 ms → rc module_1 → delay 50 ms → rc module_2 → …
-        The resulting RX events are handled by _handle_rx_event to update state.
-        """
-        await asyncio.sleep(0.150)
-        for module in self.modules:
-            if not self.hub.is_connected:
-                break
-            try:
-                await self.hub.async_read_coils(module.module_id, 0, max(module.coil_count, 1))
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("domoriks: post-activity read failed for module %d: %s", module.module_id, err)
-                self._unreachable_modules.add(module.module_id)
-                # Notify entities so available goes False immediately.
-                self.async_set_updated_data(self.data or {})
-            await asyncio.sleep(0.050)
+    async def _async_verify_poll(self, module_id: int) -> None:
+        """After a short debounce, read the addressed module to confirm its state."""
+        try:
+            await asyncio.sleep(self.VERIFY_POLL_DEBOUNCE)
+        except asyncio.CancelledError:
+            return
+        await self._async_read_module(module_id)
+
+    async def _async_delayed_verify_poll(self, module_id: int, delay_s: int) -> None:
+        """Poll a module after a delayed action's delay elapses, so the eventual
+        output change is reflected in HA."""
+        try:
+            await asyncio.sleep(delay_s + self.DELAY_POLL_MARGIN)
+        except asyncio.CancelledError:
+            return
+        await self._async_read_module(module_id)
+
+    async def _async_read_module(self, module_id: int) -> None:
+        """Read coils for a single module. The RX reply updates coordinator state."""
+        module = self._module_map.get(module_id)
+        if module is None or not self.hub.is_connected:
+            return
+        try:
+            await self.hub.async_read_coils(module.module_id, 0, max(module.coil_count, 1))
+            self._unreachable_modules.discard(module_id)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("domoriks: verify-poll failed for module %d: %s", module_id, err)
+            self._unreachable_modules.add(module_id)
+            # Notify entities so available goes False immediately.
+            self.async_set_updated_data(self.data or {})
 
 
 class DomoriksCoordinatorEntity(CoordinatorEntity[DomoriksCoordinator]):
